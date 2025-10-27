@@ -1,4 +1,6 @@
 import json
+import os
+
 import numpy as np
 import pandas as pd
 import torch
@@ -21,10 +23,12 @@ class BotDetectorGNN:
         self.edge_index = None
         self.labels = None
 
-    def load_data(self, bots_file='../bots_data.json', humans_file='../humans_data.json'):
+    def load_data(self, bots_file='data/for_model_1/bots_data.json', humans_file='data/for_model_1/humans_data.json'):
         """Загружает и объединяет данные ботов и людей"""
         print("Загрузка данных...")
 
+        print(os.getcwd())
+        print(os.path.abspath(bots_file))
         with open(bots_file, 'r', encoding='utf-8') as f:
             bots_data = json.load(f)
         with open(humans_file, 'r', encoding='utf-8') as f:
@@ -65,7 +69,7 @@ class BotDetectorGNN:
                 similarity = np.dot(all_features[i], all_features[j]) / (
                         np.linalg.norm(all_features[i]) * np.linalg.norm(all_features[j]) + 1e-8
                 )
-                if similarity > 0.7:  # Порог сходства для создания ребра
+                if similarity > 0.95:  # Порог сходства для создания ребра
                     edges.append([i, j])
                     edge_attributes.append(similarity)
 

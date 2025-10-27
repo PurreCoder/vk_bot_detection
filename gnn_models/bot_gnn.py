@@ -91,22 +91,3 @@ class BotGNN(nn.Module):
             print(f"Error in get_feature_importance: {e}")
             # Возвращаем равномерное распределение как последний fallback
             return np.ones(self.num_features) / self.num_features
-
-    def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
-
-        if self.model_type == 'GAT':
-            x = F.elu(self.conv1(x, edge_index))
-            x = F.elu(self.conv2(x, edge_index))
-            x = F.elu(self.conv3(x, edge_index))
-        else:
-            x = F.relu(self.conv1(x, edge_index))
-            x = F.relu(self.conv2(x, edge_index))
-            x = F.relu(self.conv3(x, edge_index))
-
-        # Глобальное среднее pooling для классификации
-        if batch is not None:
-            x = global_mean_pool(x, batch)
-
-        x = self.classifier(x)
-        return F.log_softmax(x, dim=1)

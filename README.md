@@ -46,8 +46,10 @@ VK_GNN_Research
 
 ## Установка и запуск
 ***
-1. `git clone https://github.com/PurreCoder/`
+1. `git clone https://github.com/PurreCoder/vk_bot_detection`
 2.  `pip install -r requirements.txt`
+    - Если некоторые модули не установились, доустановить их командой `pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.8.0+cpu.html`
+    - Продолжить и завершить установку
 3. Получить access token с помощью скрипта vk_token_helper.py
 4. Записать полученный access token в config.py
 5. Обеспечить наличие JSON с id ботов `for_model_1/bots_ids.json`

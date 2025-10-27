@@ -22,8 +22,8 @@ class ModelTester:
         print(f"Используется устройство: {self.device}")
 
         self.detector = BotDetectorGNN(my_model)
-        bots_users, humans_users = self.detector.load_data('../data/for_model_1/bots_data.json',
-                                                      '../data/for_model_1/humans_data.json')
+        bots_users, humans_users = self.detector.load_data('data/for_model_1/bots_data.json',
+                                                      'data/for_model_1/humans_data.json')
 
         # Извлечение признаков
         bots_features, bots_labels, bots_ids = self.detector.extract_features(bots_users, 0)  # 0 - бот
