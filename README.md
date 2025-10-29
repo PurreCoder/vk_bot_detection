@@ -62,7 +62,7 @@ VK_GNN_Research
     - Запустить скрипт `get_group_members.py`
 7. Запустить скрипт `vk_data_collector.py`
     - Скрипт через VK API подтянет данные пользователей по их id и запишет в JSON файлы в папку for_model_1
-    - Создадутся два отдельных файла: bots_ids.json и humans_ids.json
+    - Создадутся два отдельных файла: `bots_data.json` и `humans_data.json`
 8. Запустить main.py для обучения и тестирования модели с отображением результатов
 
 ## Авторы

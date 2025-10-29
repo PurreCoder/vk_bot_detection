@@ -27,8 +27,6 @@ class BotDetectorGNN:
         """Загружает и объединяет данные ботов и людей"""
         print("Загрузка данных...")
 
-        print(os.getcwd())
-        print(os.path.abspath(bots_file))
         with open(bots_file, 'r', encoding='utf-8') as f:
             bots_data = json.load(f)
         with open(humans_file, 'r', encoding='utf-8') as f:

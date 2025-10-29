@@ -39,7 +39,8 @@ class ModelTester:
         test_mask = torch.zeros(graph_data.num_nodes, dtype=torch.bool)
 
         indices = list(range(graph_data.num_nodes))
-        train_idx, test_idx = train_test_split(indices, test_size=0.2, random_state=42)
+        train_idx, test_idx = train_test_split(indices, test_size=0.2, shuffle=True) # random_state=42
+        print(test_idx)
 
         train_mask[train_idx] = True
         test_mask[test_idx] = True
@@ -49,7 +50,6 @@ class ModelTester:
 
         print(f"Train nodes: {train_mask.sum()}, Test nodes: {test_mask.sum()}")
 
-        # Обучение разных моделей GNN
         self.models = {
             'GCN': BotGNN(graph_data.num_features, 64, 2, 'GCN'),
             'GAT': BotGNN(graph_data.num_features, 64, 2, 'GAT'),
