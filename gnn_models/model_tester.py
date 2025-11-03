@@ -94,9 +94,10 @@ class ModelTester:
         top_features_idx = np.argsort(feature_weights)[-10:]
         top_features_names = [self.detector.feature_names[i] for i in top_features_idx]
 
-        visualize_menu(graph_data, self.results)
-        visualize_feature_importance(feature_weights[top_features_idx], top_features_names)
-        finish_visualization()
+        visualize_menu(graph_data, self.results,
+                       feature_weights=feature_weights[top_features_idx],
+                       feature_names=top_features_names,
+                       use_3d=True)
 
 
 if __name__ == "__main__":

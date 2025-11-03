@@ -1,25 +1,135 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def visualize_feature_importance(feature_weights, feature_names):
     plt.subplot(1, 3, 3)
-
     if feature_weights is not None:
         plt.barh(feature_names, feature_weights)
         plt.title('Топ-10 важных признаков')
+        plt.xlabel('Важность')
     else:
         print(f"Feature importance visualization failed.")
         plt.text(0.5, 0.5, 'Feature importance\nnot available',
                  ha='center', va='center', transform=plt.gca().transAxes)
 
 
-def finish_visualization():
-    plt.tight_layout()
-    plt.savefig('bot_detection_results.png', dpi=300, bbox_inches='tight')
-    plt.show()
+def visualize_graph_3d(graph_data):
+    """3D визуализация графа"""
+    try:
+        import networkx as nx
+        from mpl_toolkits.mplot3d import Axes3D
+
+        #fig = plt.figure(figsize=(10, 8))
+        ax = plt.subplot(1, 3, 2, projection='3d')
+
+        # Создаем граф
+        g = nx.Graph()
+        edges = graph_data.edge_index.t().cpu().numpy()
+
+        # Ограничиваем количество узлов для производительности
+        max_nodes = 10000
+        if graph_data.num_nodes > max_nodes:
+            # Берем случайную выборку узлов
+            node_indices = np.random.choice(graph_data.num_nodes, max_nodes, replace=False)
+            mask = np.isin(edges[:, 0], node_indices) & np.isin(edges[:, 1], node_indices)
+            edges = edges[mask]
+
+        g.add_edges_from(edges)
+
+        # 3D позиции узлов
+        pos = nx.spring_layout(g, dim=3)
+
+        # Преобразуем позиции в numpy массивы
+        nodes = list(g.nodes())
+        x = [pos[node][0] for node in nodes]
+        y = [pos[node][1] for node in nodes]
+        z = [pos[node][2] for node in nodes]
+
+        # Цвета узлов
+        node_colors = []
+        node_sizes = []
+        for node in nodes:
+            if node < len(graph_data.y):
+                if graph_data.y[node] == 0:
+                    node_colors.append('red')  # Боты
+                    node_sizes.append(80)
+                else:
+                    node_colors.append('blue')  # Люди
+                    node_sizes.append(50)
+            #else:
+            #    node_colors.append('gray')  # Неизвестные
+            #    node_sizes.append(30)
+
+        # Рисуем узлы
+        ax.scatter(x, y, z, c=node_colors, s=node_sizes, alpha=0.7, edgecolors='w', linewidths=0.5)
+
+        # Рисуем ребра
+        for edge in g.edges():
+            x_vals = [pos[edge[0]][0], pos[edge[1]][0]]
+            y_vals = [pos[edge[0]][1], pos[edge[1]][1]]
+            z_vals = [pos[edge[0]][2], pos[edge[1]][2]]
+            ax.plot(x_vals, y_vals, z_vals, 'gray', alpha=0.3, linewidth=0.5)
+
+        ax.set_title('3D Визуализация графа\n(красные - боты, синие - люди)')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        # Легенда
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='red', label='Боты'),
+            Patch(facecolor='blue', label='Люди')#,
+            #Patch(facecolor='gray', label='Неизвестные')
+        ]
+        ax.legend(handles=legend_elements, loc='upper left')
+
+    except ImportError as e:
+        print(f"3D visualization requires mpl_toolkits: {e}")
+        visualize_graph_2d(graph_data)
+    except Exception as e:
+        print(f"3D graph visualization failed: {e}")
+        visualize_graph_2d(graph_data)
 
 
-def visualize_menu(graph_data, results):
+def visualize_graph_2d(graph_data):
+    """2D визуализация графа"""
+    plt.subplot(1, 3, 2)
+    try:
+        import networkx as nx
+        g = nx.Graph()
+        edges = graph_data.edge_index.t().cpu().numpy()
+
+        # Ограничиваем для производительности
+        max_edges = 10000
+        if len(edges) > max_edges:
+            edges = edges[:max_edges]
+
+        g.add_edges_from(edges)
+
+        node_colors = []
+        for i in range(min(2000, graph_data.num_nodes)):
+            if i < len(graph_data.y):
+                if graph_data.y[i] == 0:
+                    node_colors.append('red')  # Боты
+                else:
+                    node_colors.append('blue')  # Люди
+            else:
+                node_colors.append('gray')  # Неизвестные
+
+        pos = nx.spring_layout(g)
+        nx.draw(g, pos, node_color=node_colors[:len(g.nodes)],
+                node_size=50, with_labels=False, alpha=0.7)
+        plt.title('Граф (красные - боты, синие - люди)')
+
+    except Exception as e:
+        print(f"2D graph visualization also failed: {e}")
+
+
+def visualize_menu(graph_data, results, feature_weights=None, feature_names=None, use_3d=True):
+    """Основная функция визуализации с опцией 3D"""
+
     plt.figure(figsize=(15, 5))
 
     # 1. Меню сравнения моделей
@@ -29,30 +139,13 @@ def visualize_menu(graph_data, results):
     plt.ylabel('Точность')
     plt.xticks(rotation=45)
 
-    # 2. Визуализация графа (упрощенная)
-    plt.subplot(1, 3, 2)
-    try:
-        import networkx as nx
-        # Создаем упрощенный граф для визуализации
-        g = nx.Graph()
-        edges = graph_data.edge_index.t().numpy()
+    # 2. Визуализация графа 2D или 3D
+    if use_3d:
+        visualize_graph_3d(graph_data)
+    else:
+        visualize_graph_2d(graph_data)
 
-        # Берем только часть ребер для наглядности
-        sample_edges = edges  # [:min(2144, len(edges))]
-        g.add_edges_from(sample_edges)
+    visualize_feature_importance(feature_weights, feature_names)
 
-        node_colors = []
-        for i in range(graph_data.num_nodes):  # min(200, graph_data.num_nodes)):
-            if graph_data.y[i] == 0:
-                node_colors.append('red')  # Боты
-            else:
-                node_colors.append('blue')  # Люди
-
-        pos = nx.spring_layout(g)
-        nx.draw(g, pos, node_color=node_colors[:len(g.nodes)],
-                node_size=50, with_labels=False, alpha=0.7)
-        plt.title('Граф (красные - боты, синие - люди)')
-    except Exception as e:
-        print(f"Graph visualization failed: {e}")
-        plt.text(0.5, 0.5, 'Graph visualization\nnot available',
-                 ha='center', va='center', transform=plt.gca().transAxes)
+    plt.tight_layout()
+    plt.show()
