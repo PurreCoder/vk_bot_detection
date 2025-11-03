@@ -55,39 +55,96 @@ class BotGNN(nn.Module):
         x = self.classifier(x)
         return F.log_softmax(x, dim=1)
 
-    def get_feature_importance(self):
-        """
-                Универсальный метод получения важности признаков
-        """
+    def _weight_based_importance(self):
+        """Метод на основе весов модели с исправлениями"""
         try:
-            # Пробуем разные источники весов по порядку
+            weights = None
+
             if self.model_type == 'GCN':
+                # Для GCN берем веса из первого слоя
                 if hasattr(self.conv1, 'lin') and hasattr(self.conv1.lin, 'weight'):
                     weights = self.conv1.lin.weight
-                else:
+                elif hasattr(self.conv1, 'weight') and self.conv1.weight is not None:
                     weights = self.conv1.weight
 
             elif self.model_type == 'GAT':
-                # Для GAT используем веса из feature_projection как fallback
-                weights = self.feature_projection.weight
+                # Для GAT используем веса из первого слоя
+                if hasattr(self.conv1, 'lin_src') and hasattr(self.conv1.lin_src, 'weight'):
+                    weights = self.conv1.lin_src.weight
+                else:
+                    # Fallback на feature_projection
+                    weights = self.feature_projection.weight
 
             elif self.model_type == 'SAGE':
+                # Для SAGE используем оба преобразования
+                weights_l, weights_r = None, None
+
+                if hasattr(self.conv1, 'lin_l') and hasattr(self.conv1.lin_l, 'weight'):
+                    weights_l = self.conv1.lin_l.weight
                 if hasattr(self.conv1, 'lin_r') and hasattr(self.conv1.lin_r, 'weight'):
-                    weights = self.conv1.lin_r.weight
-                elif hasattr(self.conv1, 'lin_l') and hasattr(self.conv1.lin_l, 'weight'):
-                    weights = self.conv1.lin_l.weight
-                else:
-                    # Для SAGE также используем feature_projection как fallback
-                    weights = self.feature_projection.weight
+                    weights_r = self.conv1.lin_r.weight
+
+                if weights_l is not None and weights_r is not None:
+                    weights = (weights_l + weights_r) / 2
+                elif weights_l is not None:
+                    weights = weights_l
+                elif weights_r is not None:
+                    weights = weights_r
 
             # Если все попытки провалились, используем classifier weights
             if weights is None or weights.shape[1] != self.num_features:
                 weights = self.classifier[0].weight  # Первый слой classifier
 
-            feature_importance = abs(weights.mean(dim=0).detach().cpu().numpy())
-            return feature_importance
+            # Нормализованная важность признаков
+            feature_importance = torch.abs(weights).mean(dim=0)
+            feature_importance = feature_importance / feature_importance.sum()
+
+            return feature_importance.detach().cpu().numpy()
 
         except Exception as e:
-            print(f"Error in get_feature_importance: {e}")
-            # Возвращаем равномерное распределение как последний fallback
+            print(f"Error in weight-based importance: {e}")
             return np.ones(self.num_features) / self.num_features
+
+
+    def _gradient_based_importance(self, data):
+        """Метод на основе градиентов с правильной настройкой градиентов"""
+        try:
+            self.eval()
+            x = data.x.clone().requires_grad_(True)
+
+            # Создаем новый data объект для прямого прохода
+            grad_data = data.clone()
+            grad_data.x = x
+
+            out = self.forward(grad_data)
+
+            # Используем сумму выходов для градиентов (избегаем unused tensors)
+            # Это гарантирует, что все элементы x будут использованы в вычислении градиентов
+            output_sum = out.sum()
+
+            # Вычисляем градиенты
+            gradients = torch.autograd.grad(
+                outputs=output_sum,
+                inputs=x,
+                create_graph=False,
+                retain_graph=False,
+                allow_unused=False
+            )[0]
+
+            feature_importance = torch.abs(gradients).mean(dim=0)
+
+            # Нормализация
+            if feature_importance.sum() > 0:
+                feature_importance = feature_importance / feature_importance.sum()
+            else:
+                feature_importance = torch.ones_like(feature_importance) / feature_importance.size(0)
+
+            return feature_importance.detach().cpu().numpy()
+
+        except Exception as e:
+            print(f"Error in gradient-based importance: {e}")
+            # Fallback на weight-based метод
+            return self._weight_based_importance()
+
+    def get_feature_weights(self, data):
+        return self._gradient_based_importance(data)

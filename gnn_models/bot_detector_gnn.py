@@ -67,7 +67,7 @@ class BotDetectorGNN:
                 similarity = np.dot(all_features[i], all_features[j]) / (
                         np.linalg.norm(all_features[i]) * np.linalg.norm(all_features[j]) + 1e-8
                 )
-                if similarity > 0.95:  # Порог сходства для создания ребра
+                if similarity > self.model.SIMILARITY_THRESHOLD:  # Порог сходства для создания ребра
                     edges.append([i, j])
                     edge_attributes.append(similarity)
 
@@ -75,6 +75,7 @@ class BotDetectorGNN:
         edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
         edge_attr = torch.tensor(edge_attributes, dtype=torch.float)
         node_features = torch.tensor(all_features, dtype=torch.float)
+        node_features.requires_grad = True
         labels = torch.tensor(all_labels, dtype=torch.long)
 
         print(f"Граф построен: {n_nodes} узлов, {edge_index.shape[1]} ребер")

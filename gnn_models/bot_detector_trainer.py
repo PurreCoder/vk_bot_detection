@@ -9,8 +9,6 @@ from torch_geometric.nn import GCNConv, GATConv, SAGEConv, global_mean_pool
 import networkx as nx
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 class BotDetectorTrainer:

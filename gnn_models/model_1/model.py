@@ -8,6 +8,8 @@ class Model:
         'has_education', 'universities_count', 'schools_count'
     )
 
+    SIMILARITY_THRESHOLD = 0.99
+
     @staticmethod
     def extract_features(users_list, label):
         """Извлекает признаки из данных пользователей"""
