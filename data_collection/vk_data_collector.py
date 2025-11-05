@@ -196,13 +196,13 @@ def main():
     N_USERS_TO_COLLECT = 100  # Количество пользователей для сбора
     DELAY_BETWEEN_REQUESTS = 0.8  # Задержка между запросами в секундах
 
-    if ACCESS_TOKEN == "YOUR_ACCESS_TOKEN":
+    if ACCESS_TOKEN == "":
         print("Пожалуйста, укажите ваш access token для VK API!")
         print("Воспользуйтесь скриптом vk_token_helper.py")
         return
 
     collector = VKDataCollector(ACCESS_TOKEN)
-    bots_ids = collector.load_ids_from_file('../bots_ids.json')
+    bots_ids = collector.load_ids_from_file('../data/for_model_1/bots_ids.json')
 
     if not bots_ids:
         print("Не удалось получить список ID пользователей. Завершение работы.")
@@ -216,7 +216,7 @@ def main():
         delay=DELAY_BETWEEN_REQUESTS
     )
 
-    users_ids = collector.load_ids_from_file('../humans_ids.json')
+    users_ids = collector.load_ids_from_file('../data/for_model_1/humans_ids.json')
 
     if not users_ids:
         print("Не удалось получить список ID пользователей. Завершение работы.")

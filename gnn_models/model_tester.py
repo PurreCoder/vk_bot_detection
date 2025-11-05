@@ -40,6 +40,8 @@ class ModelTester:
         for model_name, model in self.models.items():
             self.test_model(model_name, model, graph_data)
 
+        visualize_parameters_comparison([f'saves/{cur_model.model_type}.png' for cur_model in self.models.values()])
+
         # Сохранение лучшей модели
         torch.save(self.best_model.state_dict(), 'best_bot_detector_gnn.pth')
         print(f"\nЛучшая модель сохранена: {max(self.results, key=self.results.get)}")
@@ -97,7 +99,8 @@ class ModelTester:
         visualize_menu(graph_data, self.results,
                        feature_weights=feature_weights[top_features_idx],
                        feature_names=top_features_names,
-                       use_3d=True)
+                       filename=f'saves/{model.model_type}.png',
+                       use_3d=False)
 
 
 if __name__ == "__main__":

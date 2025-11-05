@@ -1,17 +1,29 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import image as mpimg
 
 
-def visualize_feature_importance(feature_weights, feature_names):
+def visualize_feature_importance(feature_weights, feature_names, filename):
     plt.subplot(1, 3, 3)
-    if feature_weights is not None:
-        plt.barh(feature_names, feature_weights)
-        plt.title('Топ-10 важных признаков')
-        plt.xlabel('Важность')
-    else:
+
+    if feature_weights is None:
         print(f"Feature importance visualization failed.")
         plt.text(0.5, 0.5, 'Feature importance\nnot available',
                  ha='center', va='center', transform=plt.gca().transAxes)
+        return
+
+    plt.barh(feature_names, feature_weights)
+    plt.title('Топ-10 важных признаков')
+    plt.xlabel('Важность')
+
+    # Saving to file to show ones more in the future
+    fig_to_save = plt.figure()
+    fig_to_save.add_subplot(1, 1, 1)
+    plt.barh(feature_names, feature_weights)
+    plt.title('Топ-10 важных признаков')
+    plt.xlabel('Важность')
+    fig_to_save.savefig(filename, bbox_inches='tight', dpi=300)
+    plt.close(fig_to_save)
 
 
 def visualize_graph_3d(graph_data):
@@ -127,7 +139,7 @@ def visualize_graph_2d(graph_data):
         print(f"2D graph visualization also failed: {e}")
 
 
-def visualize_menu(graph_data, results, feature_weights=None, feature_names=None, use_3d=True):
+def visualize_menu(graph_data, results, feature_weights=None, feature_names=None, filename='bar_chart.png', use_3d=True):
     """Основная функция визуализации с опцией 3D"""
 
     plt.figure(figsize=(15, 5))
@@ -145,7 +157,21 @@ def visualize_menu(graph_data, results, feature_weights=None, feature_names=None
     else:
         visualize_graph_2d(graph_data)
 
-    visualize_feature_importance(feature_weights, feature_names)
+    visualize_feature_importance(feature_weights, feature_names, filename)
 
+    plt.tight_layout()
+    plt.show()
+
+def visualize_parameters_comparison(filenames=None):
+    plt.figure(figsize=(18, 6))
+    for i, file_name in enumerate(filenames, start=1):
+        plt.subplot(1, len(filenames), i)
+        plt.axis('off')
+        try:
+            img = mpimg.imread(file_name)
+        except Exception as e:
+            print(f'Error while reading image from {file_name}: {e}')
+        else:
+            plt.imshow(img)
     plt.tight_layout()
     plt.show()
