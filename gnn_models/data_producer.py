@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-class BotDetectorGNN:
+class DataProducer:
     def __init__(self, cls):
         self.model = cls
         self.feature_names = cls.feature_names
@@ -46,6 +46,11 @@ class BotDetectorGNN:
     def build_graph(self, bots_features, humans_features, bots_labels, humans_labels, bots_ids, humans_ids):
         """Строит граф на основе сходства пользователей"""
         print("Построение графа...")
+
+        with open("saves/used_humans_ids.txt", 'w', encoding='utf-8') as f:
+            f.write(str(humans_ids))
+        with open("saves/used_bots_ids.txt", 'w', encoding='utf-8') as f:
+            f.write(str(bots_ids))
 
         # Объединяем все данные
         all_features = np.vstack([bots_features, humans_features])

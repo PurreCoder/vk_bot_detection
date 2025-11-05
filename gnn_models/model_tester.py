@@ -9,7 +9,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from gnn_models.bot_gnn import BotGNN
 from gnn_models.bot_detector_trainer import BotDetectorTrainer
-from gnn_models.bot_detector_gnn import BotDetectorGNN
+from gnn_models.data_producer import DataProducer
 from gnn_models.model_1.model import Model as my_model
 from gnn_models.graph_viz import *
 
@@ -19,8 +19,8 @@ class ModelTester:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Используется устройство: {self.device}")
 
-        self.detector = BotDetectorGNN(my_model)
-        bots_users, humans_users = self.detector.load_data('data/for_model_1/bots_data.json',
+        self.producer = DataProducer(my_model)
+        bots_users, humans_users = self.producer.load_data('data/for_model_1/bots_data.json',
                                                       'data/for_model_1/humans_data.json')
 
         graph_data = self.build_graph(bots_users, humans_users)
@@ -45,11 +45,11 @@ class ModelTester:
 
     def build_graph(self, bots_users, humans_users):
         # Извлечение признаков
-        bots_features, bots_labels, bots_ids = self.detector.extract_features(bots_users, 0)  # 0 - бот
-        humans_features, humans_labels, humans_ids = self.detector.extract_features(humans_users, 1)  # 1 - человек
+        bots_features, bots_labels, bots_ids = self.producer.extract_features(bots_users, 0)  # 0 - бот
+        humans_features, humans_labels, humans_ids = self.producer.extract_features(humans_users, 1)  # 1 - человек
 
         # Построение графа
-        graph_data, all_ids = self.detector.build_graph(
+        graph_data, all_ids = self.producer.build_graph(
             bots_features, humans_features, bots_labels, humans_labels, bots_ids, humans_ids
         )
 
@@ -90,7 +90,7 @@ class ModelTester:
         with torch.enable_grad():
             feature_weights = model.get_feature_weights(graph_data)
         top_features_idx = np.argsort(feature_weights)[-10:]
-        top_features_names = [self.detector.feature_names[i] for i in top_features_idx]
+        top_features_names = [self.producer.feature_names[i] for i in top_features_idx]
 
         visualize_menu(graph_data, self.results,
                        feature_weights=feature_weights[top_features_idx],

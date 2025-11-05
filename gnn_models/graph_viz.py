@@ -38,7 +38,7 @@ def visualize_graph_3d(graph_data):
         edges = graph_data.edge_index.t().cpu().numpy()
 
         # Ограничиваем количество узлов для производительности
-        max_nodes = 10000
+        max_nodes = 20000
         if graph_data.num_nodes > max_nodes:
             # Берем случайную выборку узлов
             node_indices = np.random.choice(graph_data.num_nodes, max_nodes, replace=False)
@@ -109,10 +109,12 @@ def visualize_graph_2d(graph_data):
     try:
         import networkx as nx
         g = nx.Graph()
+        for vertex in range(graph_data.num_nodes):
+            g.add_node(vertex)
         edges = graph_data.edge_index.t().cpu().numpy()
 
         # Ограничиваем для производительности
-        max_edges = 10000
+        max_edges = 20000
         if len(edges) > max_edges:
             edges = edges[:max_edges]
 
@@ -134,7 +136,7 @@ def visualize_graph_2d(graph_data):
         plt.title('Граф (красные - боты, синие - люди)')
 
     except Exception as e:
-        print(f"2D graph visualization also failed: {e}")
+        print(f"2D graph visualization failed: {e}")
 
 
 def visualize_menu(graph_data, results, feature_weights=None, feature_names=None, filename='bar_chart.png', use_3d=True):
