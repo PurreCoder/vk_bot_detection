@@ -1,4 +1,3 @@
-import json
 import numpy as np
 import pandas as pd
 import torch
@@ -6,11 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.data import Data, DataLoader
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, global_mean_pool
-import networkx as nx
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-import seaborn as sns
 from gnn_models.bot_gnn import BotGNN
 from gnn_models.bot_detector_trainer import BotDetectorTrainer
 from gnn_models.bot_detector_gnn import BotDetectorGNN

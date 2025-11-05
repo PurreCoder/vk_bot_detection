@@ -32,10 +32,8 @@ def visualize_graph_3d(graph_data):
         import networkx as nx
         from mpl_toolkits.mplot3d import Axes3D
 
-        #fig = plt.figure(figsize=(10, 8))
         ax = plt.subplot(1, 3, 2, projection='3d')
 
-        # Создаем граф
         g = nx.Graph()
         edges = graph_data.edge_index.t().cpu().numpy()
 

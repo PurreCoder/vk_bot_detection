@@ -1,3 +1,4 @@
+import random
 import requests
 import json
 import time
@@ -166,7 +167,10 @@ class VKDataCollector:
             print('Список собираемых параметров пользователя пуст')
             return []
 
-        users_to_process = user_ids[:n_users]
+        if n_users != len(user_ids):
+            users_to_process = random.sample(user_ids, min(n_users, len(user_ids)))
+        else:
+            users_to_process = user_ids
         users_data = []
 
         print(f"Начинаем сбор данных для первых {n_users} пользователей из {len(user_ids)}...")

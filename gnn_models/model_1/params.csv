@@ -1,4 +1,4 @@
-first_name,last_name,sex,bdate,city,country,photo_max_orig,
+first_name,last_name,sex,bdate,city,country,has_photo,
 domain,home_town,contacts,site,education,universities,
 schools,status,last_seen,followers_count,occupation,
 relation,personal,interests,music,movies,tv,books,
