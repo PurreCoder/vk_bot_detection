@@ -2,14 +2,17 @@ import numpy as np
 
 class Model:
     profile_traits = ('blacklisted', 'site', 'status', 'about', 'activities', 'interests', 'music', 'movies',
-                      'tv', 'books', 'games', 'quotes', 'mobile_phone', 'home_phone', 'relation')
+                      'tv', 'books', 'games', 'quotes', 'mobile_phone', 'home_phone', 'relation', 'has_photo')
+
+    counters = ('albums', 'videos', 'photos', 'notes', 'friends', 'gifts', 'groups', 'subscriptions')
+
     feature_names = (
-        'sex', 'last_seen', 'followers_count', *profile_traits,
+        'sex', 'last_seen', 'followers_count', *profile_traits, *counters,
         'alcohol', 'inspired_by', 'life_main', 'people_main', 'smoking',
         'has_education', 'occupation', 'universities_count', 'schools_count', 'languages'
     )
 
-    SIMILARITY_THRESHOLD = 0.75
+    SIMILARITY_THRESHOLD = 0.9
 
     @staticmethod
     def extract_features(users_list, label):
@@ -28,6 +31,11 @@ class Model:
             # Признаки профиля
             for trait in Model.profile_traits:
                 feature_vector.append(1 if user.get(trait, 0) else 0)
+
+            # Счётчики
+            counters = user.get('counters', {})
+            for counter in Model.counters:
+                feature_vector.append(counters.get(counter, 0))
 
             # Личное
             personal = user.get('personal', {})

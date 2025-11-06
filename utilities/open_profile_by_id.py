@@ -19,19 +19,20 @@ def get_element_from_file(file_name, index):
 
 def main():
     while True:
-        index = int(input())
-        if index <= 0:
-            break
+        index_list = list(map(int, input().split()))
+        for index in index_list:
+            if index <= 0:
+                break
 
-        user_id = get_element_from_file('../saves/used_bots_ids.txt', index)
-        if user_id == -1:
-            user_id = get_element_from_file('../saves/used_humans_ids.txt', index - BOTS_LIST_SIZE)
-        if user_id == -1:
-            print('Sorry, but no can do :(')
-            continue
+            user_id = get_element_from_file('../saves/used_bots_ids.txt', index)
+            if user_id == -1:
+                user_id = get_element_from_file('../saves/used_humans_ids.txt', index - BOTS_LIST_SIZE)
+            if user_id == -1:
+                print('Sorry, but no can do :(')
+                continue
 
-        user_url = f'https://vk.com/id{user_id}'
-        webbrowser.open(user_url)
+            user_url = f'https://vk.com/id{user_id}'
+            webbrowser.open(user_url)
 
 if __name__ == '__main__':
     main()

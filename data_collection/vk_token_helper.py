@@ -11,7 +11,7 @@ def get_token_interactive():
     print("=" * 60)
 
     client_id = "51527129" # id из ВК
-    scope = "friends,photos,status,video,stories,pages,notes,wall,groups,offline"
+    scope = "friends,photos,status,video,stories,pages,notes,wall,groups,offline,stats"
 
     auth_url = (
         f"https://oauth.vk.com/authorize?"

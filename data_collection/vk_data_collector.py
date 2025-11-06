@@ -173,7 +173,7 @@ class VKDataCollector:
             users_to_process = user_ids
         users_data = []
 
-        print(f"Начинаем сбор данных для первых {n_users} пользователей из {len(user_ids)}...")
+        print(f"Начинаем сбор данных для {n_users} пользователей из {len(user_ids)}...")
 
         for i, user_id in enumerate(users_to_process, 1):
             print(f"Обрабатываем {i}/{len(users_to_process)}: ID {user_id}")
@@ -197,7 +197,7 @@ class VKDataCollector:
 
 def main():
     ACCESS_TOKEN = config.ACCESS_TOKEN
-    N_USERS_TO_COLLECT = 100  # Количество пользователей для сбора
+    N_USERS_TO_COLLECT = 275  # Количество пользователей для сбора
     DELAY_BETWEEN_REQUESTS = 0.8  # Задержка между запросами в секундах
 
     if ACCESS_TOKEN == "":

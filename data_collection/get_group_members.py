@@ -36,7 +36,7 @@ def get_group_members_simple(access_token, group_id, count=1000):
 
 if __name__ == "__main__":
     ACCESS_TOKEN = config.ACCESS_TOKEN
-    GROUP_ID = "206968656" # сообщество (не беседа) с записями (бакалавриат)
+    GROUP_ID = "77402688" # сообщество (не беседа)
 
-    members = get_group_members_simple(ACCESS_TOKEN, GROUP_ID, count=100)
+    members = get_group_members_simple(ACCESS_TOKEN, GROUP_ID, count=275)
     print(','.join([str(member['id']) for member in members]))

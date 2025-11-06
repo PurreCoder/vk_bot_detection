@@ -74,7 +74,7 @@ class ModelTester:
     def test_model(self, model_name, model, graph_data):
         print(f"\n=== Обучение {model_name} ===")
         trainer = BotDetectorTrainer(model, self.device)
-        losses = trainer.train(graph_data, epochs=15)
+        losses = trainer.train(graph_data, epochs=35)
         accuracy = trainer.test(graph_data)
         self.results[model_name] = accuracy
 
