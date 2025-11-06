@@ -2,7 +2,7 @@ import numpy as np
 
 class Model:
     profile_traits = ('blacklisted', 'site', 'status', 'about', 'activities', 'interests', 'music', 'movies',
-                      'tv', 'books', 'games', 'quotes', 'mobile_phone', 'home_phone', 'relation', 'has_photo')
+                      'tv', 'books', 'games', 'quotes', 'mobile_phone', 'home_phone', 'relation', 'has_photo', 'bdate')
 
     counters = ('albums', 'videos', 'photos', 'notes', 'friends', 'gifts', 'groups', 'subscriptions')
 
@@ -12,10 +12,12 @@ class Model:
         'has_education', 'occupation', 'universities_count', 'schools_count', 'languages'
     )
 
+    features_count = len(feature_names)
+
     SIMILARITY_THRESHOLD = 0.9
 
     @staticmethod
-    def extract_features(users_list, label):
+    def extract_features_and_ids(users_list):
         """Извлекает признаки из данных пользователей"""
         features = []
         user_ids = []
@@ -59,4 +61,9 @@ class Model:
             features.append(feature_vector)
             user_ids.append(user.get('id'))
 
-        return np.array(features), [label] * len(features), user_ids
+        return np.array(features), user_ids
+
+    @staticmethod
+    def extract_features(users_list):
+        features, _ = Model.extract_features_and_ids(users_list)
+        return features

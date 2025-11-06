@@ -196,16 +196,15 @@ class VKDataCollector:
 
 
 def main():
-    ACCESS_TOKEN = config.ACCESS_TOKEN
     N_USERS_TO_COLLECT = 275  # Количество пользователей для сбора
     DELAY_BETWEEN_REQUESTS = 0.8  # Задержка между запросами в секундах
 
-    if ACCESS_TOKEN == "":
+    if config.ACCESS_TOKEN == "":
         print("Пожалуйста, укажите ваш access token для VK API!")
         print("Воспользуйтесь скриптом vk_token_helper.py")
         return
 
-    collector = VKDataCollector(ACCESS_TOKEN)
+    collector = VKDataCollector(config.ACCESS_TOKEN)
     bots_ids = collector.load_ids_from_file('../data/for_model_1/bots_ids.json')
 
     if not bots_ids:

@@ -1,6 +1,26 @@
-from gnn_models.model_tester import ModelTester
+import config
+from data_collection.vk_data_collector import VKDataCollector
+from gnn_models.model_inductive.graphsage_predictor_tester import make_predictions
+from gnn_models.model_inductive.graphsage_predictor_trainer import GraphSAGETrainer
+from gnn_models.model_transductive.model_tester import ModelTester
+
+
+def check_predictions():
+    collector = VKDataCollector(config.ACCESS_TOKEN)
+    id_list = [272655352, 184278050, 309319362]
+
+    collector.collect_users_data(
+        user_ids=id_list,
+        n_users=len(id_list),
+        params_file='gnn_models/model_1/params.csv',
+        output_file='data/for_inference/users_data.json',
+        delay=0.8
+    )
+
+    make_predictions()
 
 
 if __name__ == "__main__":
     ModelTester()
-
+    #GraphSAGETrainer()
+    #check_predictions()

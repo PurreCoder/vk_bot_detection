@@ -6,7 +6,7 @@
 социальной сети ВКонтакте. Исследовать, как структура связей между пользователями (друзья, подписки, 
 взаимодействия) влияет на вероятность того, что профиль является ботом.
 
-В данном проекте представлены скрипты для сбора данных пользователей из социальной сети ВКонтакте, обучения и тестирования моделей GNN и представления полученных результатов.
+В данном проекте представлены скрипты для сбора данных пользователей из социальной сети ВКонтакте, обучения и тестирования моделей GNN, а также представления и анализа полученных результатов.
 
 ## Структура проекта
 ***
@@ -16,8 +16,11 @@ VK_GNN_Research
 │   main.py
 │   README.md
 │   requirements.txt
-│
+│                   
 ├───data
+│   ├───for_inference
+│   │       users_data.json
+│   │
 │   ├───for_model_1
 │   │       bots_data.json
 │   │       bots_ids.json
@@ -26,22 +29,53 @@ VK_GNN_Research
 │   │
 │   └───for_model_2
 ├───data_collection
-│       download_bots_json.py
-│       get_group_members.py
-│       vk_data_collector.py
-│       vk_token_helper.py
+│   │   download_bots_json.py
+│   │   get_group_members.py
+│   │   vk_data_collector.py
+│   └───vk_token_helper.py
 │
-└───gnn_models
-    │   bot_detector_gnn.py
-    │   bot_detector_trainer.py
-    │   bot_gnn.py
-    │   model_tester.py
-    │
-    ├───model_1
-    │       model.py
-    │       params.csv
-    │
-    └───model_2
+├───gnn_models
+│   │   bot_detector_trainer.py
+│   │   bot_gnn.py
+│   │   data_producer.py
+│   │   graph_viz.py
+│   │
+│   ├───model_1
+│   │   │   model.py
+│   │   │   params.csv
+│   │
+│   ├───model_2
+│   ├───model_inductive
+│   │   │   graphsage_predictor.py
+│   │   │   graphsage_predictor_tester.py
+│   │   │   graphsage_predictor_trainer.py
+│   │   │
+│   ├───model_transductive
+│   │   │   model_tester.py
+│
+├───saved_data
+│   ├───save1
+│   │       bots_data.json
+│   │       bots_ids.json
+│   │       humans_data.json
+│   │       humans_ids.json
+│   │
+│   └───save2
+│           bots_data.json
+│           humans_data.json
+│
+├───saves
+│       GAT.png
+│       GCN.png
+│       inductive_gnn.pth
+│       inductive_training.png
+│       SAGE.png
+│       scaler.pkl
+│       used_bots_ids.txt
+│       used_humans_ids.txt
+│
+├───utilities
+│       open_profile_by_id.py
 ```
 
 ## Установка и запуск
@@ -63,7 +97,18 @@ VK_GNN_Research
 7. Запустить скрипт `vk_data_collector.py`
     - Скрипт через VK API подтянет данные пользователей по их id и запишет в JSON файлы в папку for_model_1
     - Создадутся два отдельных файла: `bots_data.json` и `humans_data.json`
-8. Запустить main.py для обучения и тестирования модели с отображением результатов
+8. Запустить `main.py` для обучения и тестирования модели с отображением результатов
+9. Для выбора трансдуктивных моделей (обрабатываются в `model_tester.py`) вызвать ModelTester() в `main.py`
+    - Можно установить флаг `use_3d=True` в вызове метода `visualize_menu` в `model_tester.py`
+    - Также для исследования графов можно:
+       - В `graph_viz.py` в вызове метода `nx.draw` установить `with_labels=True` для отображения меток
+       - Параллельно `main.py` запустить скрипт `utilities/open_profile_by_id.py`
+       - Выбрать интересующие метки и ввести их в одну строку через пробел в терминал `open_profile_by_id.py`
+10. Для выбора индуктивной модели:
+    - В `main.py` оставить лишь вызов `GraphSAGETrainer()`, запустить `main.py`. Произойдет обучение индуктивной модели.
+    - В `main.py` оставить лишь вызов `check_predictions()`, зафиксировать интересующие id пользователей ВК в списке `id_list`, запустить `main.py`. Будут показаны предсказания нейронной сети.
+
+P.S. При работе со скриптами может потребоваться создание вручную папок, таких как `data`, `saves` и т.д.
 
 ## Авторы
 ***

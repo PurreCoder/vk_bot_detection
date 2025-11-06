@@ -27,7 +27,7 @@ class BotDetectorTrainer:
         for epoch in range(epochs):
             self.optimizer.zero_grad()
             out = self.model(data)
-            loss = self.criterion(out, data.y)
+            loss = self.criterion(out[data.train_mask], data.y[data.train_mask])
             loss.backward()
             self.optimizer.step()
 
@@ -46,7 +46,7 @@ class BotDetectorTrainer:
         with torch.no_grad():
             out = self.model(data)
             pred = out.argmax(dim=1)
-            correct = (pred == data.y).sum()
-            accuracy = correct / data.y.size(0)
+            test_correct = (pred[data.test_mask] == data.y[data.test_mask]).sum()
+            test_accuracy = test_correct / data.test_mask.sum()
 
-        return accuracy.item()
+        return test_accuracy.item()

@@ -130,9 +130,9 @@ def visualize_graph_2d(graph_data):
             else:
                 node_colors.append('gray')  # Неизвестные
 
-        pos = nx.spring_layout(g)
+        pos = nx.spring_layout(g, method='force')
         nx.draw(g, pos, node_color=node_colors[:len(g.nodes)],
-                node_size=50, with_labels=False, alpha=0.7)
+                node_size=50, with_labels=True, alpha=0.7)
         plt.title('Граф (красные - боты, синие - люди)')
 
     except Exception as e:

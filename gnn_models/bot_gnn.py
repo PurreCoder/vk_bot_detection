@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, global_mean_pool
 
 
@@ -37,8 +38,11 @@ class BotGNN(nn.Module):
             nn.Linear(hidden_channels // 2, num_classes)
         )
 
-    def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
+    def forward(self, x, edge_index=None, batch=None):
+        if isinstance(x, Data):
+            edge_index = x.edge_index
+            batch = x.batch
+            x = x.x
 
         if self.model_type == 'GAT':
             x = F.elu(self.conv1(x, edge_index))

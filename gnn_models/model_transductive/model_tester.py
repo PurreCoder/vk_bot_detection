@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from torch_geometric.data import Data, DataLoader
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, global_mean_pool
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
 from gnn_models.bot_gnn import BotGNN
 from gnn_models.bot_detector_trainer import BotDetectorTrainer
 from gnn_models.data_producer import DataProducer
@@ -20,10 +19,9 @@ class ModelTester:
         print(f"Используется устройство: {self.device}")
 
         self.producer = DataProducer(my_model)
-        bots_users, humans_users = self.producer.load_data('data/for_model_1/bots_data.json',
+        bots_users, humans_users = self.producer.load_all_data('data/for_model_1/bots_data.json',
                                                       'data/for_model_1/humans_data.json')
-
-        graph_data = self.build_graph(bots_users, humans_users)
+        graph_data = self.producer.prepare_full_graph_data(bots_users, humans_users)
 
         self.models = {
             'GCN': BotGNN(graph_data.num_features, 64, 2, 'GCN'),
@@ -41,34 +39,6 @@ class ModelTester:
         # Сохранение лучшей модели
         torch.save(self.best_model.state_dict(), 'best_bot_detector_gnn.pth')
         print(f"\nЛучшая модель сохранена: {max(self.results, key=self.results.get)}")
-
-
-    def build_graph(self, bots_users, humans_users):
-        # Извлечение признаков
-        bots_features, bots_labels, bots_ids = self.producer.extract_features(bots_users, 0)  # 0 - бот
-        humans_features, humans_labels, humans_ids = self.producer.extract_features(humans_users, 1)  # 1 - человек
-
-        # Построение графа
-        graph_data, all_ids = self.producer.build_graph(
-            bots_features, humans_features, bots_labels, humans_labels, bots_ids, humans_ids
-        )
-
-        # Разделение на train/test
-        train_mask = torch.zeros(graph_data.num_nodes, dtype=torch.bool)
-        test_mask = torch.zeros(graph_data.num_nodes, dtype=torch.bool)
-
-        indices = list(range(graph_data.num_nodes))
-        train_idx, test_idx = train_test_split(indices, test_size=0.2, shuffle=True)  # random_state=42
-
-        train_mask[train_idx] = True
-        test_mask[test_idx] = True
-
-        graph_data.train_mask = train_mask
-        graph_data.test_mask = test_mask
-
-        print(f"Train nodes: {train_mask.sum()}, Test nodes: {test_mask.sum()}")
-
-        return graph_data
 
 
     def test_model(self, model_name, model, graph_data):
