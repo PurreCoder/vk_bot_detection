@@ -1,20 +1,11 @@
 import os
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch_geometric.data import Data, DataLoader
-from torch_geometric.nn import GCNConv, GATConv, SAGEConv, global_mean_pool
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
-from gnn_models.bot_gnn import BotGNN
-from gnn_models.bot_detector_trainer import BotDetectorTrainer
+from gnn_models.gnn import BotGNN
+from gnn_models.model_transductive.model_trainer import ModelTrainer
 from gnn_models.data_producer import DataProducer
 from gnn_models.model_1.model import Model as my_model
-from gnn_models.graph_viz import *
+from gnn_models.viz.graph_viz import *
 
 
 class GraphSAGETrainer:
@@ -47,8 +38,8 @@ class GraphSAGETrainer:
 
     def test_model(self, model_name, model, graph_data):
         print(f"\n=== Обучение {model_name} ===")
-        trainer = BotDetectorTrainer(model, self.device)
-        losses = trainer.train(graph_data, epochs=35)
+        trainer = ModelTrainer(model, self.device)
+        losses = trainer.train(graph_data, epochs=20)
         accuracy = trainer.test(graph_data)
 
         print(f"Точность: {accuracy:.4f}")

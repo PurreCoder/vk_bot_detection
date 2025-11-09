@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch_geometric.data import Data
-from gnn_models.bot_gnn import BotGNN
+from gnn_models.gnn import BotGNN
 
 
 class GraphSAGEPredictor:

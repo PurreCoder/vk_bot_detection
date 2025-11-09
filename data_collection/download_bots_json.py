@@ -1,6 +1,5 @@
 import requests
 import json
-import time
 
 
 def download_bots_json(url, output_file='../bots_ids.json'):

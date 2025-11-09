@@ -132,7 +132,7 @@ def visualize_graph_2d(graph_data):
 
         pos = nx.spring_layout(g, method='force')
         nx.draw(g, pos, node_color=node_colors[:len(g.nodes)],
-                node_size=50, with_labels=True, alpha=0.7)
+                node_size=50, with_labels=False, alpha=0.7)
         plt.title('Граф (красные - боты, синие - люди)')
 
     except Exception as e:
@@ -142,7 +142,7 @@ def visualize_graph_2d(graph_data):
 def visualize_menu(graph_data, results, feature_weights=None, feature_names=None, filename='bar_chart.png', use_3d=True):
     """Основная функция визуализации с опцией 3D"""
 
-    plt.figure(figsize=(15, 5))
+    fig = plt.figure(figsize=(15, 5))
 
     # 1. Меню сравнения моделей
     plt.subplot(1, 3, 1)
@@ -163,7 +163,7 @@ def visualize_menu(graph_data, results, feature_weights=None, feature_names=None
     plt.show()
 
 def visualize_parameters_comparison(filenames=None):
-    plt.figure(figsize=(18, 6))
+    fig = plt.figure(figsize=(18, 6))
     for i, file_name in enumerate(filenames, start=1):
         plt.subplot(1, len(filenames), i)
         plt.axis('off')

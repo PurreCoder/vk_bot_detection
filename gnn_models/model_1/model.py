@@ -29,6 +29,8 @@ class Model:
             last_seen = user.get('last_seen', {})
             feature_vector.append(last_seen.get('time', 0) if last_seen else 0)
             feature_vector.append(user.get('followers_count', 0))
+            #del_reason = user.get('deactivated', '')
+            #feature_vector.append({'': 0, 'deleted': 1, 'banned': 2}.get(del_reason, 3))
 
             # Признаки профиля
             for trait in Model.profile_traits:

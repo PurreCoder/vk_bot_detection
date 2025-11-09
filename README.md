@@ -16,7 +16,7 @@ VK_GNN_Research
 │   main.py
 │   README.md
 │   requirements.txt
-│                   
+│  
 ├───data
 │   ├───for_inference
 │   │       users_data.json
@@ -32,13 +32,11 @@ VK_GNN_Research
 │   │   download_bots_json.py
 │   │   get_group_members.py
 │   │   vk_data_collector.py
-│   └───vk_token_helper.py
+│   │   vk_token_helper.py
 │
 ├───gnn_models
-│   │   bot_detector_trainer.py
-│   │   bot_gnn.py
 │   │   data_producer.py
-│   │   graph_viz.py
+│   │   gnn.py
 │   │
 │   ├───model_1
 │   │   │   model.py
@@ -49,33 +47,40 @@ VK_GNN_Research
 │   │   │   graphsage_predictor.py
 │   │   │   graphsage_predictor_tester.py
 │   │   │   graphsage_predictor_trainer.py
-│   │   │
+│   │
 │   ├───model_transductive
 │   │   │   model_tester.py
-│
-├───saved_data
-│   ├───save1
-│   │       bots_data.json
-│   │       bots_ids.json
-│   │       humans_data.json
-│   │       humans_ids.json
+│   │   │   model_trainer.py
 │   │
-│   └───save2
-│           bots_data.json
-│           humans_data.json
+│   ├───shap_analysis
+│   │   │   deep_values_computer.py
+│   │   │   gradient_values_computer.py
+│   │   │   kernel_values_computer.py
+│   │   │   values_computer.py
+│   │
+│   ├───viz
+│   │   │   graph_viz.py
+│   │   │   shap_viz.py
 │
 ├───saves
 │       GAT.png
+│       GAT_summary_ok.png
 │       GCN.png
+│       GCN_summary_ok.png
 │       inductive_gnn.pth
 │       inductive_training.png
+│       permutation_importance.png
 │       SAGE.png
+│       SAGE_summary_ok.png
 │       scaler.pkl
+│       shap_feature_importance.png
+│       shap_summary.png
 │       used_bots_ids.txt
 │       used_humans_ids.txt
 │
 ├───utilities
 │       open_profile_by_id.py
+
 ```
 
 ## Установка и запуск
@@ -86,29 +91,34 @@ VK_GNN_Research
     - Продолжить и завершить установку
 3. Получить access token с помощью скрипта vk_token_helper.py
 4. Записать полученный access token в config.py
-5. Обеспечить наличие JSON с id ботов `for_model_1/bots_ids.json`
+5. Обеспечить наличие JSON с id ботов `data/for_model_1/bots_ids.json`
     - В JSON файле список id соответствует ключу "items"
     - Можно воспользоваться скриптом `download_bots_json.py`
     - В случае, если сайт дает список ботов только по Captcha, скачать JSON вручную по URL из файла скрипта `download_bots_json.py`
-6. Обеспечить наличие JSON с id подлинных пользователей `for_model_1/humans_ids.json`
+6. Обеспечить наличие JSON с id подлинных пользователей `data/for_model_1/humans_ids.json`
     - Для этого предлагается найти закрытое **сообщество** ВК, в котором вы знаете участников, и скопировать id сообщества
     - Вставить id в переменную `GROUP_ID` скрипта `get_group_members.py`
     - Запустить скрипт `get_group_members.py`
 7. Запустить скрипт `vk_data_collector.py`
     - Скрипт через VK API подтянет данные пользователей по их id и запишет в JSON файлы в папку for_model_1
     - Создадутся два отдельных файла: `bots_data.json` и `humans_data.json`
-8. Запустить `main.py` для обучения и тестирования модели с отображением результатов
-9. Для выбора трансдуктивных моделей (обрабатываются в `model_tester.py`) вызвать ModelTester() в `main.py`
+8. Создать папку `saves`
+9. Запустить `main.py` для обучения и тестирования модели с отображением результатов
+10. Для выбора трансдуктивных моделей (обрабатываются в `model_tester.py`) вызвать `ModelTester()` в `main.py`. Для анализа:
     - Можно установить флаг `use_3d=True` в вызове метода `visualize_menu` в `model_tester.py`
     - Также для исследования графов можно:
        - В `graph_viz.py` в вызове метода `nx.draw` установить `with_labels=True` для отображения меток
        - Параллельно `main.py` запустить скрипт `utilities/open_profile_by_id.py`
        - Выбрать интересующие метки и ввести их в одну строку через пробел в терминал `open_profile_by_id.py`
-10. Для выбора индуктивной модели:
+    - Можно настроить параметры внутри метода `add_shap_analysis` в `model_tester.py`:
+        - `background_size` отвечает за объем данных, на которых Explainer "щупает" нашу модель
+        - `test_size` отвечает за объем тестовых данных, которые Explainer будет "объяснять"
+        - `n_samples` для KernelExplainer: кол-во отклоненных оцениваний для каждого предсказания. Не ставить меньше удвоенного кол-ва признаков плюс один!
+        - Рекомедуемые значения указаны в теле метода
+11. Для выбора индуктивной модели:
+    - Создать папку `data/for_inference`
     - В `main.py` оставить лишь вызов `GraphSAGETrainer()`, запустить `main.py`. Произойдет обучение индуктивной модели.
     - В `main.py` оставить лишь вызов `check_predictions()`, зафиксировать интересующие id пользователей ВК в списке `id_list`, запустить `main.py`. Будут показаны предсказания нейронной сети.
-
-P.S. При работе со скриптами может потребоваться создание вручную папок, таких как `data`, `saves` и т.д.
 
 ## Авторы
 ***

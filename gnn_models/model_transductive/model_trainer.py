@@ -1,17 +1,8 @@
-import json
-import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch_geometric.data import Data, DataLoader
-from torch_geometric.nn import GCNConv, GATConv, SAGEConv, global_mean_pool
-import networkx as nx
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
 
 
-class BotDetectorTrainer:
+class ModelTrainer:
     def __init__(self, model, device):
         self.model = model.to(device)
         self.device = device

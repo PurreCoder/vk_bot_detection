@@ -39,6 +39,7 @@ class BotGNN(nn.Module):
         )
 
     def forward(self, x, edge_index=None, batch=None):
+        # empty edge_index will cause shutdown due to error
         if isinstance(x, Data):
             edge_index = x.edge_index
             batch = x.batch
@@ -60,7 +61,7 @@ class BotGNN(nn.Module):
         return F.log_softmax(x, dim=1)
 
     def _weight_based_importance(self):
-        """Метод на основе весов модели с исправлениями"""
+        """Метод на основе весов модели (не является основным)"""
         try:
             weights = None
 
@@ -111,7 +112,7 @@ class BotGNN(nn.Module):
 
 
     def _gradient_based_importance(self, data):
-        """Метод на основе градиентов с правильной настройкой градиентов"""
+        """Метод на основе градиентов"""
         try:
             self.eval()
             x = data.x.clone().requires_grad_(True)
