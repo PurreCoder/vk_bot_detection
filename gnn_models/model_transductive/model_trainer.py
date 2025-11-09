@@ -27,6 +27,7 @@ class ModelTrainer:
             if epoch % 5 == 0:
                 accuracy = self.test(data)
                 print(f'Epoch {epoch:03d}, Loss: {loss:.4f}, Accuracy: {accuracy:.4f}')
+                self.model.train()
 
         return train_losses
 
@@ -41,3 +42,17 @@ class ModelTrainer:
             test_accuracy = test_correct / data.test_mask.sum()
 
         return test_accuracy.item()
+
+    def predict_labels_for_test(self, data):
+        self.model.eval()
+        data = data.to(self.device)
+
+        with torch.no_grad():
+            out = self.model(data)
+
+        pred = out.argmax(dim=1)
+        test_mask = data.test_mask
+        y_true = data.y[test_mask]
+        y_pred = pred[test_mask]
+
+        return y_true.cpu().numpy(), y_pred.cpu().numpy()
