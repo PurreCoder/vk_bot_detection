@@ -86,14 +86,12 @@ class ModelTester:
         print(f"\n=== SHAP Analysis for {model.model_type} ===")
 
         shap_visualizer = SHAPVisualizer(my_model.feature_names)
-        computer = KernelValuesComputer(self.best_model, my_model.feature_names)
-        #computer = GradientValuesComputer(model, my_model.feature_names)
+
+        #computer = KernelValuesComputer(self.best_model, my_model.feature_names)
+        computer = GradientValuesComputer(model, my_model.feature_names)
         #computer = DeepValuesComputer(model, my_model.feature_names)
 
-        BACKGROUND_SIZE = 30
-        TEST_SIZE = 110
-        N_SAMPLES = 100
-        shap_values, test_data = computer.get_shap_values(graph_data, 10, 10, 78)
+        shap_values, test_data = computer.get_values(graph_data)
 
         if shap_values is None:
             print("❌ Failed to compute SHAP values")

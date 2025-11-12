@@ -30,6 +30,7 @@ class KernelValuesComputer(ValuesComputer):
 
             if edge_index is None or edge_index.numel() == 0:
                 edge_index = torch.tensor([[i, i] for i in range(n_samples)], dtype=torch.long).t().to(self.device)
+                # edge_index = torch.tensor([list(range(n_samples)), list(range(n_samples))], dtype=torch.long).t().to(self.device)
                 edge_attr = torch.tensor([1] * n_samples, dtype=torch.float).to(self.device)
 
             # Create data object
@@ -56,9 +57,12 @@ class KernelValuesComputer(ValuesComputer):
 
         return np.concatenate(shap_parts)
 
-    def get_shap_values(self, data, background_size=40, test_size=110, n_samples=100):
+    def get_values(self, data, background_size=40, test_size=None, n_samples=100):
         """Compute SHAP values using Kernel Explainer"""
         print("Computing SHAP values using Kernel Explainer...")
+
+        if test_size is None:
+            test_size = data.test_mask.sum().item()
 
         background_data, test_data = self.prepare_data(data, background_size, test_size)
         explainer = shap.KernelExplainer(self._model_predict, background_data)

@@ -45,6 +45,9 @@ class BotGNN(nn.Module):
             batch = x.batch
             x = x.x
 
+        if edge_index is None:
+            edge_index = torch.tensor([[0], [0]], dtype=torch.long).to(x.device)
+
         if self.model_type == 'GAT':
             x = F.elu(self.conv1(x, edge_index))
             x = F.elu(self.conv2(x, edge_index))

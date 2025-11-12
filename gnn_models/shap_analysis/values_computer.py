@@ -10,18 +10,20 @@ class ValuesComputer:
         self.model.to(device)
         self.model.eval()
 
+    def sample_data(self, data, size):
+        if len(data) > size:
+            idx = np.random.choice(len(data), size, replace=False)
+            data = data[idx]
+        return data
+
     def prepare_data(self, data, background_size, test_size):
         # Prepare background data (reference dataset)
         background_data = data.cpu().x.detach().numpy()[data.train_mask]
-        if len(background_data) > background_size:
-            background_idx = np.random.choice(len(background_data), background_size, replace=False)
-            background_data = background_data[background_idx]
+        background_data = self.sample_data(background_data, background_size)
 
         # Prepare test data
-        test_data = data.x.detach().numpy()[data.test_mask]
-        if len(test_data) > test_size:
-            test_idx = np.random.choice(len(test_data), test_size, replace=False)
-            test_data = test_data[test_idx]
+        test_data = data.cpu().x.detach().numpy()[data.test_mask]
+        test_data = self.sample_data(test_data, test_size)
 
         print(f"Background data shape: {background_data.shape}")
         print(f"Test data shape: {test_data.shape}")
