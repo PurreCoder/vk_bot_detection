@@ -11,7 +11,7 @@ def get_group_members_simple(access_token, group_id, count=1000):
     params = {
         'access_token': access_token,
         'group_id': group_id,
-        'count': min(count, 1000),
+        'count': count,
         'fields': 'first_name,last_name,domain',
         'v': '5.131'
     }
@@ -36,7 +36,8 @@ def get_group_members_simple(access_token, group_id, count=1000):
 
 if __name__ == "__main__":
     ACCESS_TOKEN = config.ACCESS_TOKEN
-    GROUP_ID = "77402688" # сообщество (не беседа)
+    # 77402688
+    GROUP_ID = "201766823" # сообщество (не беседа)
 
-    members = get_group_members_simple(ACCESS_TOKEN, GROUP_ID, count=275)
+    members = get_group_members_simple(ACCESS_TOKEN, GROUP_ID, count=1000)
     print(','.join([str(member['id']) for member in members]))

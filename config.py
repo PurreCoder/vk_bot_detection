@@ -1,2 +1,1 @@
 ACCESS_TOKEN = ""
-SERVICE_KEY = ""
