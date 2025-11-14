@@ -160,8 +160,8 @@ def visualize_menu(graph_data, results, feature_weights=None, feature_names=None
     visualize_feature_importance(feature_weights, feature_names, filename)
 
     plt.tight_layout()
-    #plt.show()
-    plt.close(fig)
+    plt.show()
+    #plt.close(fig)
 
 def visualize_parameters_comparison(filenames=None):
     fig = plt.figure(figsize=(18, 6))
@@ -175,5 +175,5 @@ def visualize_parameters_comparison(filenames=None):
         else:
             plt.imshow(img)
     plt.tight_layout()
-    #plt.show()
-    plt.close(fig)
+    plt.show()
+    #plt.close(fig)

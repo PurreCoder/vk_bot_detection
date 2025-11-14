@@ -25,7 +25,7 @@ class GraphSAGETrainer:
         producer = DataProducer(my_model, 'saves/scaler.pkl')
         bots_users, humans_users = producer.load_all_data('data/for_model_1/bots_data.json',
                                                       'data/for_model_1/humans_data.json')
-        graph_data = producer.prepare_full_graph_data(bots_users, humans_users)
+        graph_data, ids = producer.prepare_full_graph_data(bots_users, humans_users)
 
         self.model= BotGNN(graph_data.num_features, 64, 2, 'SAGE')
 

@@ -1,3 +1,4 @@
+import json
 import torch
 from sklearn.metrics import roc_curve, auc
 from gnn_models.gnn import BotGNN
@@ -21,7 +22,7 @@ class ModelTester:
         self.producer = DataProducer(my_model)
         bots_users, humans_users = self.producer.load_all_data('data/for_model_1/bots_data.json',
                                                       'data/for_model_1/humans_data.json')
-        graph_data = self.producer.prepare_full_graph_data(bots_users, humans_users)
+        graph_data, ids = self.producer.prepare_full_graph_data(bots_users, humans_users)
 
         self.models = {
             'GCN': BotGNN(graph_data.num_features, 64, 2, 'GCN'),
@@ -32,7 +33,7 @@ class ModelTester:
         self.results = {}
 
         for model_name, model in self.models.items():
-            self.test_model(model_name, model, graph_data)
+            self.test_model(model_name, model, graph_data, ids)
 
         # Сохранение лучшей модели
         torch.save(self.best_model.state_dict(), 'best_bot_detector_gnn.pth')
@@ -43,7 +44,7 @@ class ModelTester:
         self.add_shap_analysis(self.models['GraphSAGE'], graph_data)
 
 
-    def test_model(self, model_name, model, graph_data):
+    def test_model(self, model_name, model, graph_data, ids):
         print(f"\n=== Обучение {model_name} ===")
         trainer = ModelTrainer(model, self.device)
         trainer.train(graph_data, epochs=25)
@@ -63,10 +64,23 @@ class ModelTester:
         # print(f"{model_name} ROC-AUC: {roc_auc:.4f}")
         # plot_roc_curve(fpr, tpr, roc_auc)
 
+        # logging model mistakes
+        test_ids = [its_id for its_id, its_bit in zip(ids, graph_data.test_mask) if its_bit]
+        self.log_model_mistakes(y_true, y_pred, test_ids, model_name)
+
         self.best_model_name = max(self.results, key=self.results.get)
         self.best_model = self.models[self.best_model_name]
 
         self.visualize_model(model, graph_data)
+
+    def log_model_mistakes(self, y_true, y_pred, test_ids, model_name):
+        wrong_preds = {}
+        for i in range(y_true.shape[0]):
+            if y_true[i] != y_pred[i]:
+                wrong_preds[str(test_ids[i])] = int(y_pred[i])
+
+        with open(f'saves/{model_name}_mistakes.json', 'w') as file:
+           json.dump(wrong_preds, file)
 
     def visualize_model(self, model, graph_data):
         model.eval()

@@ -113,7 +113,7 @@ class DataProducer:
         test_mask = torch.zeros(graph_data.num_nodes, dtype=torch.bool)
 
         indices = list(range(graph_data.num_nodes))
-        train_idx, test_idx = train_test_split(indices, test_size=0.2, shuffle=True)
+        train_idx, test_idx = train_test_split(indices, test_size=0.2)
 
         train_mask[train_idx] = True
         test_mask[test_idx] = True
@@ -151,4 +151,4 @@ class DataProducer:
         # Разбиение на train/test
         graph_data = self.make_train_test_split(graph_data)
 
-        return graph_data
+        return graph_data, all_ids

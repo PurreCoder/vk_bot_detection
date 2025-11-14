@@ -9,7 +9,7 @@ def make_predictions():
     # Старые данные
     original_bots_users, original_humans_users = producer.load_all_data('data/for_model_1/bots_data.json',
                                                   'data/for_model_1/humans_data.json')
-    original_graph_data = producer.prepare_full_graph_data(original_bots_users, original_humans_users)
+    original_graph_data, original_ids = producer.prepare_full_graph_data(original_bots_users, original_humans_users)
 
     # Новые данные
     new_users = producer.load_data('data/for_inference/users_data.json')
