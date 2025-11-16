@@ -16,16 +16,22 @@ class ValuesComputer:
             data = data[idx]
         return data
 
-    def prepare_data(self, data, background_size, test_size):
-        # Prepare background data (reference dataset)
-        background_data = data.cpu().x.detach().numpy()[data.train_mask]
-        background_data = self.sample_data(background_data, background_size)
+    def prepare_data(self, data, mask, size):
+        data = data.x.detach().cpu().numpy()[mask.cpu().numpy()]
+        data = self.sample_data(data, size)
+        return data
 
-        # Prepare test data
-        test_data = data.cpu().x.detach().numpy()[data.test_mask]
-        test_data = self.sample_data(test_data, test_size)
+    def get_attribute_values(self, data, test_size=None):
+        """Compute attribute values using Integrated Gradients or DeepLift"""
 
-        print(f"Background data shape: {background_data.shape}")
-        print(f"Test data shape: {test_data.shape}")
+        if test_size is None:
+            test_data = data[data.train_mask]
+        else:
+            test_data = self.prepare_data(data, data.train_mask, test_size)
 
-        return background_data, test_data
+        test_tensor = torch.tensor(test_data, requires_grad=True).to(self.device)
+
+        return self.get_values_for_test(test_tensor), test_data
+
+    def get_values_for_test(self, test_tensor):
+        pass

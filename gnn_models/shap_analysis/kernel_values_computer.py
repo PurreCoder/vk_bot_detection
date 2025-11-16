@@ -25,16 +25,16 @@ class KernelValuesComputer(ValuesComputer):
             if n_samples > 1:
                 edge_index, edge_attr = DataProducer(my_model).build_edges(x_array)
             else:
-                edge_index = torch.tensor([[i, i] for i in range(n_samples)], dtype=torch.long).t().to(self.device)
-                edge_attr = torch.tensor([1] * n_samples, dtype=torch.float).to(self.device)
+                edge_index = torch.LongTensor([list(range(n_samples)), list(range(n_samples))]).to(self.device)
+                #edge_attr = torch.tensor([1] * n_samples, dtype=torch.float).to(self.device)
 
             if edge_index is None or edge_index.numel() == 0:
-                edge_index = torch.tensor([[i, i] for i in range(n_samples)], dtype=torch.long).t().to(self.device)
+                edge_index = torch.LongTensor([list(range(n_samples)), list(range(n_samples))]).to(self.device)
                 # edge_index = torch.tensor([list(range(n_samples)), list(range(n_samples))], dtype=torch.long).t().to(self.device)
-                edge_attr = torch.tensor([1] * n_samples, dtype=torch.float).to(self.device)
+                #edge_attr = torch.tensor([1] * n_samples, dtype=torch.float).to(self.device)
 
             # Create data object
-            data = Data(x=x_tensor, edge_index=edge_index, edge_attr=edge_attr, feature_names=self.feature_names).to(self.device)
+            data = Data(x=x_tensor, edge_index=edge_index, feature_names=self.feature_names).to(self.device)
 
             # Get model predictions
             outputs = self.model(data)
@@ -57,14 +57,21 @@ class KernelValuesComputer(ValuesComputer):
 
         return np.concatenate(shap_parts)
 
-    def get_values(self, data, background_size=40, test_size=None, n_samples=100):
+    def get_shap_values(self, data, background_size=40, test_size=None, n_samples=100):
         """Compute SHAP values using Kernel Explainer"""
         print("Computing SHAP values using Kernel Explainer...")
 
         if test_size is None:
             test_size = data.test_mask.sum().item()
 
-        background_data, test_data = self.prepare_data(data, background_size, test_size)
+        # Prepare background data (reference dataset)
+        background_data = self.prepare_data(data, data.train_mask, background_size)
+        # Prepare test data (what we calculate values for)
+        test_data = self.prepare_data(data, data.test_mask, test_size)
+
+        print(f"Background data shape: {background_data.shape}")
+        print(f"Test data shape: {test_data.shape}")
+
         explainer = shap.KernelExplainer(self._model_predict, background_data)
         shap_values = self.compute_in_batches(explainer, test_data, n_samples)
         shap_values = shap_values[:, :, 1]

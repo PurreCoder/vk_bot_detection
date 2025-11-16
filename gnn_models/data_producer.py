@@ -73,7 +73,8 @@ class DataProducer:
     def build_edges(self, all_features):
         """Строит графовую струтуру на основе косинусового свойства"""
         n_nodes = len(all_features)
-        edges = []
+        edges_from = []
+        edges_to = []
         edge_attributes = []
 
         for i in range(n_nodes):
@@ -82,11 +83,11 @@ class DataProducer:
                         np.linalg.norm(all_features[i]) * np.linalg.norm(all_features[j]) + 1e-8
                 )
                 if similarity > self.model.SIMILARITY_THRESHOLD:
-                    edges.append([i, j])
-                    edges.append([j, i])
+                    edges_from.append(i)
+                    edges_to.append(j)
                     edge_attributes.append(similarity)
 
-        edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
+        edge_index = torch.LongTensor([edges_from, edges_to])
         edge_attr = torch.tensor(edge_attributes, dtype=torch.float)
 
         return edge_index, edge_attr

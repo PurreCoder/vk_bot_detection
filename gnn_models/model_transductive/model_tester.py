@@ -1,4 +1,6 @@
 import json
+import os
+from copy import deepcopy
 import torch
 from sklearn.metrics import roc_curve, auc
 from gnn_models.gnn import BotGNN
@@ -25,31 +27,50 @@ class ModelTester:
         graph_data, ids = self.producer.prepare_full_graph_data(bots_users, humans_users)
 
         self.models = {
-            'GCN': BotGNN(graph_data.num_features, 64, 2, 'GCN'),
-            'GAT': BotGNN(graph_data.num_features, 64, 2, 'GAT'),
-            'GraphSAGE': BotGNN(graph_data.num_features, 64, 2, 'SAGE')
+            'GCN': BotGNN(graph_data.num_features, 64, 'GCN'),
+            'GAT': BotGNN(graph_data.num_features, 64, 'GAT'),
+            'SAGE': BotGNN(graph_data.num_features, 64, 'SAGE')
         }
 
         self.results = {}
 
-        for model_name, model in self.models.items():
-            self.test_model(model_name, model, graph_data, ids)
+        self.process_models(graph_data, ids)
+
+    def process_models(self, graph_data, ids):
+        for model in self.models.values():
+            self.evaluate_model(model, graph_data, ids)
+
+            self.best_model_name = max(self.results, key=self.results.get)
+            self.best_model = self.models[self.best_model_name]
+
+            self.visualize_model(deepcopy(model), graph_data)
 
         # Сохранение лучшей модели
-        torch.save(self.best_model.state_dict(), 'best_bot_detector_gnn.pth')
+        torch.save(self.best_model.state_dict(), 'saves/best_bot_detector_gnn.pth')
         print(f"\nЛучшая модель сохранена: {max(self.results, key=self.results.get)}")
 
         visualize_parameters_comparison([f'saves/{cur_model.model_type}.png' for cur_model in self.models.values()])
 
-        self.add_shap_analysis(self.models['GraphSAGE'], graph_data)
+        self.prepare_clean_folder('saves/dependence_plots')
+        #self.prepare_clean_folder('saves/explanation_plots')
 
+        attribution_method = ('gradient', 'deeplift', 'kernel')[0]
+        self.add_shap_analysis(self.models['SAGE'], graph_data, attribution_method)
 
-    def test_model(self, model_name, model, graph_data, ids):
+    def evaluate_model(self, model, graph_data, ids):
+        model_name = model.model_type
         print(f"\n=== Обучение {model_name} ===")
         trainer = ModelTrainer(model, self.device)
         trainer.train(graph_data, epochs=25)
 
+        # getting labels and model predictions for data
         y_true, y_pred = trainer.predict_labels_for_test(graph_data)
+
+        # logging model mistakes
+        test_ids = [its_id for its_id, its_bit in zip(ids, graph_data.test_mask) if its_bit]
+        self.log_model_mistakes(y_true, y_pred, test_ids, model_name)
+
+        # calculating metrics
         metrics = compute_metrics(y_true, y_pred)
         self.results[model_name] = metrics['accuracy']
 
@@ -64,15 +85,6 @@ class ModelTester:
         # print(f"{model_name} ROC-AUC: {roc_auc:.4f}")
         # plot_roc_curve(fpr, tpr, roc_auc)
 
-        # logging model mistakes
-        test_ids = [its_id for its_id, its_bit in zip(ids, graph_data.test_mask) if its_bit]
-        self.log_model_mistakes(y_true, y_pred, test_ids, model_name)
-
-        self.best_model_name = max(self.results, key=self.results.get)
-        self.best_model = self.models[self.best_model_name]
-
-        self.visualize_model(model, graph_data)
-
     def log_model_mistakes(self, y_true, y_pred, test_ids, model_name):
         wrong_preds = {}
         for i in range(y_true.shape[0]):
@@ -81,6 +93,16 @@ class ModelTester:
 
         with open(f'saves/{model_name}_mistakes.json', 'w') as file:
            json.dump(wrong_preds, file)
+
+    def prepare_clean_folder(self, folder_path):
+        if not os.path.isdir(folder_path):
+            os.mkdir(folder_path)
+            return
+
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
 
     def visualize_model(self, model, graph_data):
         model.eval()
@@ -95,22 +117,33 @@ class ModelTester:
                        filename=f'saves/{model.model_type}.png',
                        use_3d=False)
 
-    def add_shap_analysis(self, model, graph_data):
-        """Add SHAP analysis for the chosen model"""
+    def add_shap_analysis(self, model, graph_data, method="gradient"):
+        """Add SHAP analysis for the chosen model using chosen method"""
         print(f"\n=== SHAP Analysis for {model.model_type} ===")
+
+        if method not in ('gradient', 'deeplift', 'kernel'):
+            print("Shap analysis failed: Passed invalid method")
+            return
 
         shap_visualizer = SHAPVisualizer(my_model.feature_names)
 
-        #computer = KernelValuesComputer(self.best_model, my_model.feature_names)
-        computer = GradientValuesComputer(model, my_model.feature_names)
-        #computer = DeepValuesComputer(model, my_model.feature_names)
+        if method == 'kernel':
+            computer = KernelValuesComputer(deepcopy(model), my_model.feature_names)
+            shap_values, test_data = computer.get_shap_values(graph_data) # <---- SET PARAMETERS HERE
+        else:
+            if method == 'gradient':
+                computer = GradientValuesComputer(deepcopy(model), my_model.feature_names)
+            else:
+                computer = DeepValuesComputer(deepcopy(model), my_model.feature_names)
 
-        shap_values, test_data = computer.get_values(graph_data)
+            test_data = graph_data.x[graph_data.test_mask].detach().cpu().numpy()
+            shap_values = computer.get_values_for_test(test_data)
 
         if shap_values is None:
             print("❌ Failed to compute SHAP values")
             return
 
+        # general shap analysis
         shap_visualizer.create_comprehensive_report(shap_values, test_data)
 
         print("\nSHAP Analysis Complete!")

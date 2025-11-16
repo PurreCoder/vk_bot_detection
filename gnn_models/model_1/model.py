@@ -67,14 +67,18 @@ class Model:
         return feature_dict
 
     @staticmethod
+    def extract_feature_vector(user):
+        feature_dict = Model.extract_user_features(user)
+        return [feature_dict[key] for key in Model.feature_names]
+
+    @staticmethod
     def extract_features_and_ids(users_list):
         """Извлекает признаки из данных пользователей"""
         features = []
         user_ids = []
 
         for user in users_list:
-            feature_dict = Model.extract_user_features(user)
-            features.append([feature_dict[key] for key in Model.feature_names])
+            features.append(Model.extract_feature_vector(user))
             user_ids.append(user.get('id'))
 
         return np.array(features), user_ids

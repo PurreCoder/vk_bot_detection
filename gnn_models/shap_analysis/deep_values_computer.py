@@ -8,29 +8,25 @@ from gnn_models.shap_analysis.values_computer import ValuesComputer
 
 class DeepValuesComputer(ValuesComputer):
 
-    def get_values(self, data, background_size=None, test_size=None):
-        """Compute pseudo-SHAP values using DeepLift"""
-        print("Computing pseudo-SHAP values using DeepLift...")
+    def get_values_for_test(self, test_data):
+        """Compute attribute values using Deep Lift"""
 
-        if background_size is None:
-            background_size = data.train_mask.sum().item()
-        if test_size is None:
-            test_size = data.test_mask.sum().item()
+        print("Computing attribute values using Deep Lift...")
 
-        background_data, test_data = self.prepare_data(data, background_size, test_size)
-        test_tensor = torch.tensor(test_data).to(self.device)
-        #edge_index, edge_attr = DataProducer(my_model).build_edges(test_data)
+        edge_index, _ = DataProducer(my_model).build_edges(test_data)
+        test_tensor = torch.Tensor(test_data).requires_grad_(True).to(self.device)
+        edge_index = edge_index.to(self.device)
 
-        #baseline = torch.tensor(test_data.mean(axis=0)).repeat(test_size, 1).to(self.device)
-        #baseline = torch.zeros(test_size, background_size).to(self.device)
-        #baseline_edge_index = torch.tensor([[i, i] for i in range(2)], dtype=torch.long).t().to(self.device).repeat(test_size, 1)
+        baseline = torch.tensor(test_data.mean(axis=0)).repeat(test_tensor.size(0), 1).to(self.device)
 
         self.model.eval()
-        dl = DeepLiftShap(self.model.to(self.device))
-        attributions = dl.attribute(
-            inputs=test_tensor,#(test_tensor, edge_index),
-            #baselines=torch.zeros(test_size, len(self.feature_names)).to(self.device),
-            baselines=torch.tensor(test_data.mean(axis=0)).repeat(test_size, 1).to(self.device),
-            target=1)
+        explainer = DeepLiftShap(self.model.to(self.device))
+        attributions = explainer.attribute(
+            inputs=test_tensor,
+            additional_forward_args=(edge_index, None),
+            baselines=baseline,
+            target=1
+        )
 
-        return attributions.detach().cpu().numpy(), test_data
+        return attributions.detach().cpu().numpy()
+

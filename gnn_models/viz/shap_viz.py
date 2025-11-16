@@ -60,7 +60,7 @@ class SHAPVisualizer:
                                  feature_names=self.feature_names, show=False)
             plt.title(f'SHAP Dependence Plot - {self.feature_names[feature_index]}')
             plt.tight_layout()
-            plt.savefig(f'saves/shap_dependence_{self.feature_names[feature_index]}.png',
+            plt.savefig(f'saves/dependence_plots/{self.feature_names[feature_index]}.png',
                         dpi=300, bbox_inches='tight')
             plt.close()
             print(f"✓ Dependence plot for {self.feature_names[feature_index]} saved!")

@@ -64,10 +64,13 @@ VK_GNN_Research
 │
 ├───saves
 │       GAT.png
+│       GAT_mistakes.json
 │       GCN.png
+│       GCN_mistakes.json
 │       inductive_gnn.pth
 │       inductive_training.png
 │       SAGE.png
+│       SAGE_mistakes.json
 │       scaler.pkl
 │       shap_feature_importance.png
 │       shap_summary.png
@@ -103,16 +106,17 @@ VK_GNN_Research
    - Для всех моделей диаграммы самых значимых признаков, выбранных с помощью метода, написанного авторами проекта
    - Summary plot (beeswarm plot) shap-значений для одной из моделей (по умолчанию `GraphSAGE`)
    - Топ-15 самых значимых признаков с точки зрения shap-анализа для выбранной модели
-   - Графики взаимных зависимостей признаков на основе анализа shap-значений
+   - Графики взаимных зависимостей признаков на основе анализа shap-значений (в подпапке `dependence plots`) 
+   - JSON-файлы с ошибками (ложными предсказаниями) GCN, GAT, GraphSAGE на тестовой выборке. Для каждого id будет указан прогноз, который сделала модель
 10. Для выбора трансдуктивных моделей (обрабатываются в `model_tester.py`) вызвать `ModelTester()` в `main.py`. Для анализа:
     - Можно установить флаг `use_3d=True` в вызове метода `visualize_menu` в `model_tester.py`
     - Также для исследования графов можно:
        - В `graph_viz.py` в вызове метода `nx.draw` установить `with_labels=True` для отображения меток
        - Параллельно `main.py` запустить скрипт `utilities/open_profile_by_id.py`
        - Выбрать интересующие метки и ввести их в одну строку через пробел в терминал `open_profile_by_id.py`
-    - Для выбора SHAP-анализа интересующей модели (`GCN`, `GAT`, `GraphSAGE`), указать её в качестве параметра `self.add_shap_analysis(...)` в теле метода `__init__` класса `ModelTester` в `model_tester.py`
-    - Для выбора способа подсчёта значений (`KernelValues`, `GradientValues`, `DeepValues`), раскомментировать соответствующую строчку `computer = ...` в теле метода `add_shap_analysis` в `model_tester.py`
-    - Имеет смысл настраивать параметры для `KernelValuesComputer` в вызове `get_values()` в теле метода `add_shap_analysis` в `model_tester.py`:
+    - Для выбора SHAP-анализа интересующей модели (`GCN`, `GAT`, `GraphSAGE`), указать её в качестве аргумента `self.add_shap_analysis(...)` в теле метода `process_models` в `model_tester.py`
+    - В вызове метода `add_shap_analysis` также можно выбрать способ подсчёта значений (`gradient`, `deeplift`, `kernel`) 
+    - Имеет смысл настраивать параметры для `KernelValuesComputer` в вызове `get_shap_values()` в теле метода `add_shap_analysis` в `model_tester.py`:
         - `background_size` отвечает за объем данных, на которых Explainer "щупает" нашу модель (можно уменьшать)
         - `test_size` отвечает за объем тестовых данных, которые Explainer будет "объяснять"
         - `n_samples` для KernelExplainer: кол-во отклоненных оцениваний для каждого предсказания. Не ставить меньше удвоенного кол-ва признаков плюс один!

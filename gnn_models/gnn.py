@@ -7,7 +7,7 @@ from torch_geometric.nn import GCNConv, GATConv, SAGEConv, global_mean_pool
 
 
 class BotGNN(nn.Module):
-    def __init__(self, num_features, hidden_channels, num_classes, model_type='GCN'):
+    def __init__(self, num_features, hidden_channels, model_type='GCN'):
         super(BotGNN, self).__init__()
 
         self.model_type = model_type
@@ -35,18 +35,24 @@ class BotGNN(nn.Module):
             nn.Linear(hidden_channels, hidden_channels // 2),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(hidden_channels // 2, num_classes)
+            nn.Linear(hidden_channels // 2, 2)
         )
 
     def forward(self, x, edge_index=None, batch=None):
-        # empty edge_index will cause shutdown due to error
         if isinstance(x, Data):
             edge_index = x.edge_index
             batch = x.batch
             x = x.x
 
         if edge_index is None:
-            edge_index = torch.tensor([[0], [0]], dtype=torch.long).to(x.device)
+            print('Warning: empty edge index!')
+            edge_index = torch.LongTensor([[0], [0]])
+            if hasattr(x, 'device'):
+                edge_index = edge_index.to(x.device)
+
+        # opposing explainers which repeat edge_index |test_size| times
+        if edge_index.size(0) != 2:
+            edge_index = edge_index[:2, :].contiguous()
 
         if self.model_type == 'GAT':
             x = F.elu(self.conv1(x, edge_index))
