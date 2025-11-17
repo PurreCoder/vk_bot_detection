@@ -1,9 +1,8 @@
 import torch
 from captum.attr import IntegratedGradients
-from torch_geometric.data import Data
 from gnn_models.model_1.model import Model as my_model
-from gnn_models.data_producer import DataProducer
-from gnn_models.shap_analysis.values_computer import ValuesComputer
+from data_processing.data_processor import DataProcessor
+from shap_analysis.values_computer import ValuesComputer
 
 
 class GradientValuesComputer(ValuesComputer):
@@ -13,7 +12,7 @@ class GradientValuesComputer(ValuesComputer):
 
         print("Computing attribute values using Integrated Gradients...")
 
-        edge_index, _ = DataProducer(my_model).build_edges(test_data)
+        edge_index, _ = DataProcessor(my_model).build_edges(test_data)
         test_tensor = torch.Tensor(test_data).requires_grad_(True).to(self.device)
         edge_index = edge_index.to(self.device)
 

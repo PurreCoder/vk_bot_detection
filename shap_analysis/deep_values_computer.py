@@ -1,9 +1,8 @@
 import torch
-from captum.attr import IntegratedGradients, DeepLiftShap
-from torch_geometric.data import Data
+from captum.attr import DeepLiftShap
 from gnn_models.model_1.model import Model as my_model
-from gnn_models.data_producer import DataProducer
-from gnn_models.shap_analysis.values_computer import ValuesComputer
+from data_processing.data_processor import DataProcessor
+from shap_analysis.values_computer import ValuesComputer
 
 
 class DeepValuesComputer(ValuesComputer):
@@ -13,9 +12,9 @@ class DeepValuesComputer(ValuesComputer):
 
         print("Computing attribute values using Deep Lift...")
 
-        edge_index, _ = DataProducer(my_model).build_edges(test_data)
-        test_tensor = torch.Tensor(test_data).requires_grad_(True).to(self.device)
+        edge_index, _ = DataProcessor(my_model).build_edges(test_data)
         edge_index = edge_index.to(self.device)
+        test_tensor = torch.Tensor(test_data).requires_grad_(True).to(self.device)
 
         baseline = torch.tensor(test_data.mean(axis=0)).repeat(test_tensor.size(0), 1).to(self.device)
 

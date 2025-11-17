@@ -1,19 +1,18 @@
-import json
-import os
-from copy import deepcopy
 import torch
-from sklearn.metrics import roc_curve, auc
+import config
+from copy import deepcopy
+from data_processing.file_manager import load_all_users, prepare_clean_folder, save_json_data
 from gnn_models.gnn import BotGNN
 from gnn_models.metrics_calc import compute_metrics
 from gnn_models.model_transductive.model_trainer import ModelTrainer
-from gnn_models.data_producer import DataProducer
+from data_processing.data_processor import DataProcessor
 from gnn_models.model_1.model import Model as my_model
-from gnn_models.shap_analysis.gradient_values_computer import GradientValuesComputer
-from gnn_models.shap_analysis.deep_values_computer import DeepValuesComputer
-from gnn_models.shap_analysis.kernel_values_computer import KernelValuesComputer
-from gnn_models.viz.graph_viz import *
-from gnn_models.viz.roc_viz import plot_roc_curve
-from gnn_models.viz.shap_viz import SHAPVisualizer
+from shap_analysis.explanation_pipeline import explain_false_predictions
+from shap_analysis.gradient_values_computer import GradientValuesComputer
+from shap_analysis.deep_values_computer import DeepValuesComputer
+from shap_analysis.kernel_values_computer import KernelValuesComputer
+from viz.graph_viz import *
+from viz.shap_viz import SHAPVisualizer
 
 
 class ModelTester:
@@ -21,10 +20,9 @@ class ModelTester:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Используется устройство: {self.device}")
 
-        self.producer = DataProducer(my_model)
-        bots_users, humans_users = self.producer.load_all_data('data/for_model_1/bots_data.json',
-                                                      'data/for_model_1/humans_data.json')
-        graph_data, ids = self.producer.prepare_full_graph_data(bots_users, humans_users)
+        bots_users, humans_users = load_all_users(config.DATA_SOURCE['BOTS_FILE'], config.DATA_SOURCE['HUMANS_FILE'])
+        self.processor = DataProcessor(my_model)
+        graph_data, ids = self.processor.prepare_full_graph_data(bots_users, humans_users)
 
         self.models = {
             'GCN': BotGNN(graph_data.num_features, 64, 'GCN'),
@@ -46,16 +44,19 @@ class ModelTester:
             self.visualize_model(deepcopy(model), graph_data)
 
         # Сохранение лучшей модели
-        torch.save(self.best_model.state_dict(), 'saves/best_bot_detector_gnn.pth')
+        torch.save(self.best_model.state_dict(), config.MODELS_SAVES['TRANSDUCTIVE_SAVE'])
         print(f"\nЛучшая модель сохранена: {max(self.results, key=self.results.get)}")
 
         visualize_parameters_comparison([f'saves/{cur_model.model_type}.png' for cur_model in self.models.values()])
 
-        self.prepare_clean_folder('saves/dependence_plots')
-        #self.prepare_clean_folder('saves/explanation_plots')
+        prepare_clean_folder('saves/dependence_plots')
+        prepare_clean_folder('saves/explanation_plots')
+
+        explain_false_predictions(self.processor, deepcopy(self.models['GAT']), graph_data, SHAPVisualizer(my_model.feature_names))
 
         attribution_method = ('gradient', 'deeplift', 'kernel')[0]
-        self.add_shap_analysis(self.models['SAGE'], graph_data, attribution_method)
+        attr_kwargs = dict(background_size=40, test_size=None, n_samples=100) # actually applied only for kernel
+        self.add_shap_analysis(self.models['SAGE'], graph_data, attribution_method, **attr_kwargs)
 
     def evaluate_model(self, model, graph_data, ids):
         model_name = model.model_type
@@ -91,18 +92,7 @@ class ModelTester:
             if y_true[i] != y_pred[i]:
                 wrong_preds[str(test_ids[i])] = int(y_pred[i])
 
-        with open(f'saves/{model_name}_mistakes.json', 'w') as file:
-           json.dump(wrong_preds, file)
-
-    def prepare_clean_folder(self, folder_path):
-        if not os.path.isdir(folder_path):
-            os.mkdir(folder_path)
-            return
-
-        for filename in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, filename)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
+        save_json_data(wrong_preds, f'saves/{model_name}_mistakes.json')
 
     def visualize_model(self, model, graph_data):
         model.eval()
@@ -117,7 +107,23 @@ class ModelTester:
                        filename=f'saves/{model.model_type}.png',
                        use_3d=False)
 
-    def add_shap_analysis(self, model, graph_data, method="gradient"):
+    def get_shap_values(self, model, graph_data, method, **kwargs):
+        if method == 'kernel':
+            computer = KernelValuesComputer(model, my_model.feature_names)
+            shap_values, test_data = computer.get_shap_values(graph_data, **kwargs)
+            return shap_values, test_data
+
+        if method == 'gradient':
+            computer = GradientValuesComputer(model, my_model.feature_names)
+        else:
+            computer = DeepValuesComputer(model, my_model.feature_names)
+
+        test_data = graph_data.x[graph_data.test_mask].detach().cpu().numpy()
+        shap_values = computer.get_values_for_test(test_data)
+
+        return shap_values, test_data
+
+    def add_shap_analysis(self, model, graph_data, method="gradient", **kwargs):
         """Add SHAP analysis for the chosen model using chosen method"""
         print(f"\n=== SHAP Analysis for {model.model_type} ===")
 
@@ -125,25 +131,14 @@ class ModelTester:
             print("Shap analysis failed: Passed invalid method")
             return
 
-        shap_visualizer = SHAPVisualizer(my_model.feature_names)
-
-        if method == 'kernel':
-            computer = KernelValuesComputer(deepcopy(model), my_model.feature_names)
-            shap_values, test_data = computer.get_shap_values(graph_data) # <---- SET PARAMETERS HERE
-        else:
-            if method == 'gradient':
-                computer = GradientValuesComputer(deepcopy(model), my_model.feature_names)
-            else:
-                computer = DeepValuesComputer(deepcopy(model), my_model.feature_names)
-
-            test_data = graph_data.x[graph_data.test_mask].detach().cpu().numpy()
-            shap_values = computer.get_values_for_test(test_data)
+        shap_values, test_data = self.get_shap_values(deepcopy(model), graph_data, method, **kwargs)
 
         if shap_values is None:
             print("❌ Failed to compute SHAP values")
             return
 
         # general shap analysis
+        shap_visualizer = SHAPVisualizer(my_model.feature_names)
         shap_visualizer.create_comprehensive_report(shap_values, test_data)
 
         print("\nSHAP Analysis Complete!")

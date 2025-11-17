@@ -1,6 +1,7 @@
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
+from shap import Explanation
 
 
 class SHAPVisualizer:
@@ -67,6 +68,30 @@ class SHAPVisualizer:
 
         except Exception as e:
             print(f"❌ Dependence plot failed: {e}")
+
+    def plot_explanation(self, model_name, its_id, explanation):
+        # print("----------")
+        #print(explanation)
+        plt.figure(figsize=(10, 6))
+        shap.plots.waterfall(explanation, max_display=len(self.feature_names), show=False)
+        plt.title(f'SHAP Explanation for user id{its_id}')
+        plt.tight_layout()
+        plt.savefig(f'saves/explanation_plots/{model_name}_id{its_id}.png',
+                    dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def plot_explanations(self, model_name, ids, explanations):
+        explained_counter = 0
+        for its_id, explanation in zip(ids, explanations):
+            if np.any(explanation.values):
+                if explained_counter > 15:
+                    print('Provided explanations only for first 15 users')
+                    break
+                self.plot_explanation(model_name, its_id, explanation)
+                explained_counter += 1
+            else:
+                print('Failed to explain prediction for user id', its_id)
+
 
     def create_comprehensive_report(self, shap_values, test_data):
         """Create comprehensive SHAP analysis"""

@@ -31,11 +31,15 @@ VK_GNN_Research
 │   │   download_bots_json.py
 │   │   get_group_members.py
 │   │   vk_data_collector.py
-│   │   vk_token_helper.py
+│
+├───data_processing
+│   │   data_processor.py
+│   │   feature_processor.py
+│   │   file_manager.py
 │
 ├───gnn_models
-│   │   data_producer.py
 │   │   gnn.py
+│   │   metrics_calc.py
 │   │
 │   ├───model_1
 │   │   │   model.py
@@ -50,36 +54,43 @@ VK_GNN_Research
 │   ├───model_transductive
 │   │   │   model_tester.py
 │   │   │   model_trainer.py
-│   │
-│   ├───shap_analysis
-│   │   │   deep_values_computer.py
-│   │   │   gradient_values_computer.py
-│   │   │   kernel_values_computer.py
-│   │   │   values_computer.py
-│   │
-│   ├───viz
-│   │   │   graph_viz.py
-│   │   │   roc_viz.py
-│   │   │   shap_viz.py
 │
 ├───saves
-│       GAT.png
-│       GAT_mistakes.json
-│       GCN.png
-│       GCN_mistakes.json
-│       inductive_gnn.pth
-│       inductive_training.png
-│       SAGE.png
-│       SAGE_mistakes.json
-│       scaler.pkl
-│       shap_feature_importance.png
-│       shap_summary.png
-│       used_bots_ids.txt
-│       used_humans_ids.txt
+│   │   best_bot_detector_gnn.pth
+│   │   GAT.png
+│   │   GAT_mistakes.json
+│   │   GCN.png
+│   │   GCN_mistakes.json
+│   │   inductive_gnn.pth
+│   │   inductive_training.png
+│   │   SAGE.png
+│   │   SAGE_mistakes.json
+│   │   scaler.pkl
+│   │   shap_feature_importance.png
+│   │   shap_summary.png
+│   │   used_bots_ids.txt
+│   │   used_humans_ids.txt
+│   │
+│   ├───dependence_plots
+│   │
+│   └───explanation_plots
+│
+├───shap_analysis
+│   │   deep_values_computer.py
+│   │   explanation_constructor.py
+│   │   explanation_pipeline.py
+│   │   gradient_values_computer.py
+│   │   kernel_values_computer.py
+│   │   values_computer.py
 │
 ├───utilities
 │       open_profile_by_id.py
-
+│       vk_token_helper.py
+│
+├───viz
+│   │   graph_viz.py
+│   │   roc_viz.py
+│   │   shap_viz.py
 ```
 
 ## Инструкция по работе с проектом
@@ -88,7 +99,7 @@ VK_GNN_Research
 2.  `pip install -r requirements.txt`
     - Если отсутствуют необходимые для работы проекта модули, попробовать доустановить их командой `pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.8.0+cpu.html`
     - Продолжить и завершить установку
-3. Получить access token с помощью скрипта `data_collection/vk_token_helper.py`
+3. Получить access token с помощью скрипта `utilities/vk_token_helper.py`, запустив его <u>из директории utilities</u>
 4. Записать полученный access token в `config.py`
 5. Обеспечить наличие JSON с id ботов `data/for_model_1/bots_ids.json`
     - В JSON файле список id соответствует ключу "items"
@@ -97,17 +108,18 @@ VK_GNN_Research
 6. Обеспечить наличие JSON с id подлинных пользователей `data/for_model_1/humans_ids.json`
     - Для этого предлагается найти закрытое **сообщество** ВК, в котором вы знаете участников, и скопировать id сообщества
     - Вставить id в переменную `GROUP_ID` скрипта `data_collection/get_group_members.py`
-    - Запустить скрипт `data_collection/get_group_members.py`
-7. Запустить скрипт `data_collection/vk_data_collector.py`
+    - Запустить скрипт `data_collection/get_group_members.py` <u>из директории data_collection</u>
+7. Запустить скрипт `data_collection/vk_data_collector.py` <u>из директории data_collection</u>
     - Скрипт через VK API подтянет данные пользователей по их id и запишет в JSON файлы в папку for_model_1
     - Создадутся два отдельных файла: `bots_data.json` и `humans_data.json`
 8. В корне проекта создать папку `saves`
 9. Запустить `main.py` для обучения и тестирования модели с отображением результатов. В папке `saves` будут сохранены:
    - Для всех моделей диаграммы самых значимых признаков, выбранных с помощью метода, написанного авторами проекта
-   - Summary plot (beeswarm plot) shap-значений для одной из моделей (по умолчанию `GraphSAGE`)
+   - Summary plot (beeswarm plot) shap-значений для одной из моделей (по умолчанию `SAGE`)
    - Топ-15 самых значимых признаков с точки зрения shap-анализа для выбранной модели
-   - Графики взаимных зависимостей признаков на основе анализа shap-значений (в подпапке `dependence plots`) 
+   - Графики взаимных зависимостей признаков на основе анализа shap-значений (в подпапке `dependence_plots`) 
    - JSON-файлы с ошибками (ложными предсказаниями) GCN, GAT, GraphSAGE на тестовой выборке. Для каждого id будет указан прогноз, который сделала модель
+   - Графики, объясняющие, какие признаки повлияли на то, что выбранная модель сделала ложное предсказание (в подпапке `explanation_plots`)
 10. Для выбора трансдуктивных моделей (обрабатываются в `model_tester.py`) вызвать `ModelTester()` в `main.py`. Для анализа:
     - Можно установить флаг `use_3d=True` в вызове метода `visualize_menu` в `model_tester.py`
     - Также для исследования графов можно:

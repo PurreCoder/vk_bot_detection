@@ -1,74 +1,18 @@
-import json
 import numpy as np
 import torch
+import config
 from torch_geometric.data import Data
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from data_processing.feature_processor import FeatureProcessor
+from data_processing.file_manager import save_array
 
 
-class DataProducer:
+class DataProcessor(FeatureProcessor):
     def __init__(self, cls, file_to_save=None):
+        super(DataProcessor, self).__init__(cls, file_to_save)
         self.model = cls
         self.file_to_save = file_to_save
         self.node_features = None
-        self.edge_index = None
-        self.labels = None
-
-    def load_data(self, users_file):
-        with open(users_file, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        users = data.get('users', [])
-        return users
-
-    def load_all_data(self, bots_file, humans_file):
-        """Загружает и объединяет данные ботов и людей"""
-        print("Загрузка данных...")
-
-        bots_users = self.load_data(bots_file)
-        humans_users = self.load_data(humans_file)
-
-        print(f"Загружено ботов: {len(bots_users)}")
-        print(f"Загружено людей: {len(humans_users)}")
-
-        return bots_users, humans_users
-
-    def extract_features(self, users):
-        return self.model.extract_features(users)
-
-    def extract_features_and_ids(self, users):
-        return self.model.extract_features_and_ids(users)
-
-    def extract_data(self, users, label):
-        features, ids = self.model.extract_features_and_ids(users)
-        return features, [label] * len(ids), ids
-
-    def merge_features(self, bots_features, humans_features, bots_labels, humans_labels, bots_ids, humans_ids):
-        all_features = np.vstack([bots_features, humans_features])
-        all_labels = bots_labels + humans_labels
-        all_ids = bots_ids + humans_ids
-        return all_features, all_labels, all_ids
-
-    def scale_features(self, all_features):
-        if self.file_to_save is None:
-            scaler = StandardScaler()
-        else:
-            try:
-                import pickle
-                with open(self.file_to_save, 'rb') as f:
-                    scaler = pickle.load(f)
-            except Exception as e:
-                scaler = StandardScaler()
-
-        # Нормализуем признаки
-        all_features = scaler.fit_transform(all_features)
-
-        if self.file_to_save is not None:
-            # Сохраняем scaler при обучении
-            import pickle
-            with open(self.file_to_save, 'wb') as scaler_file:
-                pickle.dump(scaler, scaler_file)
-
-        return all_features
 
     def build_edges(self, all_features):
         """Строит графовую струтуру на основе косинусового свойства"""
@@ -133,10 +77,8 @@ class DataProducer:
         bots_features, bots_labels, bots_ids = self.extract_data(bots_users, 0)  # 0 - бот
         humans_features, humans_labels, humans_ids = self.extract_data(humans_users, 1)  # 1 - человек
 
-        with open("saves/used_humans_ids.txt", 'w', encoding='utf-8') as f:
-            f.write(str(humans_ids))
-        with open("saves/used_bots_ids.txt", 'w', encoding='utf-8') as f:
-            f.write(str(bots_ids))
+        save_array(humans_ids, config.GRAPH_DATA_LOGS['HUMANS_IDS_FILE'])
+        save_array(bots_ids, config.GRAPH_DATA_LOGS['BOTS_IDS_FILE'])
 
         # Слияние данных от ботов и подлинных пользователей
         all_features, all_labels, all_ids = self.merge_features(bots_features, humans_features,

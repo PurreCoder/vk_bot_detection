@@ -57,10 +57,9 @@ def get_group_members(access_token, group_id, count=1000, batch_size=1000):
 
 
 if __name__ == "__main__":
-    ACCESS_TOKEN = config.ACCESS_TOKEN
     GROUP_ID = "201766823" # сообщество (не беседа)
 
-    members_list = get_group_members(ACCESS_TOKEN, GROUP_ID, count=1005)
+    members_list = get_group_members(config.ACCESS_TOKEN, GROUP_ID, count=1005)
 
     with open("group_members.txt", "w") as f:
         f.writelines(str(member['id']) + ',' for member in members_list)

@@ -3,8 +3,8 @@ import shap
 import torch
 from torch_geometric.data import Data
 from gnn_models.model_1.model import Model as my_model
-from gnn_models.data_producer import DataProducer
-from gnn_models.shap_analysis.values_computer import ValuesComputer
+from data_processing.data_processor import DataProcessor
+from shap_analysis.values_computer import ValuesComputer
 
 
 class KernelValuesComputer(ValuesComputer):
@@ -23,7 +23,7 @@ class KernelValuesComputer(ValuesComputer):
 
             # Create edge_index: simple fully connected graph for the batch
             if n_samples > 1:
-                edge_index, edge_attr = DataProducer(my_model).build_edges(x_array)
+                edge_index, edge_attr = DataProcessor(my_model).build_edges(x_array)
             else:
                 edge_index = torch.LongTensor([list(range(n_samples)), list(range(n_samples))]).to(self.device)
                 #edge_attr = torch.tensor([1] * n_samples, dtype=torch.float).to(self.device)

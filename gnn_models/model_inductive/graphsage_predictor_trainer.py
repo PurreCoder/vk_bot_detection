@@ -1,11 +1,12 @@
-import os
-
 import torch
+import config
+from data_processing.file_manager import ensure_file_deleted, ensure_file_deleted, load_all_users
 from gnn_models.gnn import BotGNN
+from gnn_models.metrics_calc import compute_metrics
 from gnn_models.model_transductive.model_trainer import ModelTrainer
-from gnn_models.data_producer import DataProducer
+from data_processing.data_processor import DataProcessor
 from gnn_models.model_1.model import Model as my_model
-from gnn_models.viz.graph_viz import *
+from viz.graph_viz import *
 
 
 class GraphSAGETrainer:
@@ -13,36 +14,36 @@ class GraphSAGETrainer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Используется устройство: {self.device}")
 
-        try:
-            os.remove('saves/inductive_gnn.pth')
-        except FileNotFoundError:
-            pass
-        try:
-            os.remove('saves/scaler.pkl')
-        except FileNotFoundError:
-            pass
+        ensure_file_deleted(config.MODELS_SAVES['INDUCTIVE_SAVE'])
+        ensure_file_deleted(config.SCALER_SAVE_FILE)
 
-        producer = DataProducer(my_model, 'saves/scaler.pkl')
-        bots_users, humans_users = producer.load_all_data('data/for_model_1/bots_data.json',
-                                                      'data/for_model_1/humans_data.json')
+        producer = DataProcessor(my_model, config.SCALER_SAVE_FILE)
+        bots_users, humans_users = load_all_users(config.DATA_SOURCE['BOTS_FILE'], config.DATA_SOURCE['HUMANS_FILE'])
         graph_data, ids = producer.prepare_full_graph_data(bots_users, humans_users)
 
-        self.model= BotGNN(graph_data.num_features, 64, 2, 'SAGE')
+        self.model= BotGNN(graph_data.num_features, 64, 'SAGE')
 
         self.test_model('GraphSAGE', self.model, graph_data)
 
-        # Сохранение лучшей модели
-        torch.save(self.model.state_dict(), 'saves/inductive_gnn.pth')
-        print("\nИндуктивная модель сохранена.")
+        torch.save(self.model.state_dict(), config.MODELS_SAVES['INDUCTIVE_SAVE'])
+        print("\nИндуктивная модель сохранена")
 
 
     def test_model(self, model_name, model, graph_data):
         print(f"\n=== Обучение {model_name} ===")
         trainer = ModelTrainer(model, self.device)
-        losses = trainer.train(graph_data, epochs=20)
-        accuracy = trainer.test(graph_data)
+        trainer.train(graph_data, epochs=25)
 
-        print(f"Точность: {accuracy:.4f}")
+        # getting labels and model predictions for data
+        y_true, y_pred = trainer.predict_labels_for_test(graph_data)
+
+        # calculating metrics
+        metrics = compute_metrics(y_true, y_pred)
+
+        print(f"\n{model_name} Accuracy: {metrics['accuracy']:.4f}")
+        print(f"{model_name} Precision: {metrics['precision']:.4f}")
+        print(f"{model_name} Recall: {metrics['recall']:.4f}")
+        print(f"{model_name} F1-Score: {metrics['f1']:.4f}")
 
         self.visualize_model(model, graph_data)
 
@@ -54,7 +55,3 @@ class GraphSAGETrainer:
         top_features_names = [my_model.feature_names[i] for i in top_features_idx]
 
         visualize_feature_importance(feature_weights[top_features_idx], top_features_names, 'saves/inductive_training.png')
-
-
-if __name__ == "__main__":
-    modelTrainer = GraphSAGETrainer()

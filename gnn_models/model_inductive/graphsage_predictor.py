@@ -1,6 +1,8 @@
 import numpy as np
 import torch
+import config
 from torch_geometric.data import Data
+from data_processing.file_manager import deserialize_object
 from gnn_models.gnn import BotGNN
 
 
@@ -12,25 +14,22 @@ class GraphSAGEPredictor:
         self.model = BotGNN(
             num_features=len(feature_names),
             hidden_channels=64,
-            num_classes=2,
             model_type='SAGE'
         )
         self.model.load_state_dict(torch.load(model_path, map_location=device))
         self.model.to(device)
         self.model.eval()
 
-        self.scaler = self.load_scaler('saves/scaler.pkl')
+        self.scaler = self.load_scaler(config.SCALER_SAVE_FILE)
 
     def load_scaler(self, scaler_path):
         """Загружает сохраненный StandardScaler"""
-        try:
-            import pickle
-            with open(scaler_path, 'rb') as f:
-                return pickle.load(f)
-        except:
+        scaler = deserialize_object(scaler_path)
+        if scaler is None:
             print("Scaler not found, using new one")
             from sklearn.preprocessing import StandardScaler
-            return StandardScaler()
+            scaler = StandardScaler()
+        return scaler
 
     def predict_new_nodes(self, new_features, existing_graph_data=None, k_neighbors=5):
         """
@@ -55,8 +54,6 @@ class GraphSAGEPredictor:
     def _predict_isolated(self, new_features_tensor):
         """Предсказание для изолированных узлов (без графа)"""
         with torch.no_grad():
-            # GraphSAGE может работать даже без ребер (как MLP)
-            # Создаем пустой edge_index
             batch_size = new_features_tensor.size(0)
             edge_index = torch.empty(2, 0, dtype=torch.long).to(self.device)
 
@@ -73,18 +70,18 @@ class GraphSAGEPredictor:
         """Предсказание с интеграцией в существующий граф"""
         existing_graph_data = existing_graph_data.to(self.device)
 
-        # 1. Находим k ближайших соседей для каждого нового узла
+        # Находим k ближайших соседей для каждого нового узла
         similarity_matrix = self._compute_similarity(new_features_tensor, existing_graph_data.x)
 
-        # 2. Строим новые ребра
+        # Строим новые ребра
         new_edges = self._find_k_neighbors(similarity_matrix, k_neighbors)
 
-        # 3. Объединяем старый и новый граф
+        # Объединяем старый и новый граф
         combined_data = self._merge_graphs(
             existing_graph_data, new_features_tensor, new_edges
         )
 
-        # 4. Предсказание только для новых узлов
+        # Предсказание для новых узлов
         with torch.no_grad():
             all_predictions = self.model(combined_data.x, combined_data.edge_index)
             new_nodes_predictions = all_predictions[-new_features_tensor.size(0):]

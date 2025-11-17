@@ -214,8 +214,8 @@ def main():
     collector.collect_users_data(
         user_ids=bots_ids,
         n_users=N_USERS_TO_COLLECT,
-        params_file='../gnn_models/model_1/params.csv',
-        output_file='../data/for_model_1/bots_data.json',
+        params_file=config.PARAMS_SOURCE,
+        output_file=config.DATA_SOURCE['BOTS_FILE'],
         delay=DELAY_BETWEEN_REQUESTS
     )
 
@@ -228,8 +228,8 @@ def main():
     collector.collect_users_data(
         user_ids=users_ids,
         n_users=N_USERS_TO_COLLECT,
-        params_file='../gnn_models/model_1/params.csv',
-        output_file='../data/for_model_1/humans_data.json',
+        params_file=config.PARAMS_SOURCE,
+        output_file=config.DATA_SOURCE['HUMANS_FILE'],
         delay=DELAY_BETWEEN_REQUESTS
     )
 

@@ -55,7 +55,7 @@ def main():
     Основная функция для скачивания JSON файла
     """
     BOTS_JSON_URL = "https://api.botnadzor.org/bots"
-    OUTPUT_FILE = "../bots_ids.json"
+    OUTPUT_FILE = "../data/for_model_1/bots_ids.json"
 
     success = download_bots_json(BOTS_JSON_URL, OUTPUT_FILE)
 

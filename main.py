@@ -28,8 +28,8 @@ def check_predictions():
     collector.collect_users_data(
         user_ids=id_list,
         n_users=len(id_list),
-        params_file='gnn_models/model_1/params.csv',
-        output_file='data/for_inference/users_data.json',
+        params_file=config.PARAMS_SOURCE,
+        output_file=config.DATA_SOURCE['INFERENCE_FILE'],
         delay=0.8
     )
 
