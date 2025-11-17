@@ -47,7 +47,8 @@ class ModelTester:
         torch.save(self.best_model.state_dict(), config.MODELS_SAVES['TRANSDUCTIVE_SAVE'])
         print(f"\nЛучшая модель сохранена: {max(self.results, key=self.results.get)}")
 
-        visualize_parameters_comparison([f'saves/{cur_model.model_type}.png' for cur_model in self.models.values()])
+        visualize_parameters_comparison([f'saves/{cur_model.model_type}.png' for cur_model in self.models.values()],
+                                        show=True)
 
         prepare_clean_folder('saves/dependence_plots')
         prepare_clean_folder('saves/explanation_plots')
@@ -105,7 +106,7 @@ class ModelTester:
                        feature_weights=feature_weights[top_features_idx],
                        feature_names=top_features_names,
                        filename=f'saves/{model.model_type}.png',
-                       use_3d=False)
+                       use_3d=False, with_labels=False, show=True)
 
     def get_shap_values(self, model, graph_data, method, **kwargs):
         if method == 'kernel':

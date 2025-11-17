@@ -85,7 +85,7 @@ class SHAPVisualizer:
         for its_id, explanation in zip(ids, explanations):
             if np.any(explanation.values):
                 if explained_counter > 15:
-                    print('Provided explanations only for first 15 users')
+                    print(f'Provided explanations only for 15 users, randomly chosen out of {len(ids)} mispredictions')
                     break
                 self.plot_explanation(model_name, its_id, explanation)
                 explained_counter += 1

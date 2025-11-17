@@ -103,7 +103,7 @@ def visualize_graph_3d(graph_data):
         visualize_graph_2d(graph_data)
 
 
-def visualize_graph_2d(graph_data):
+def visualize_graph_2d(graph_data, with_labels=False):
     """2D визуализация графа"""
     plt.subplot(1, 3, 2)
     try:
@@ -132,14 +132,15 @@ def visualize_graph_2d(graph_data):
 
         pos = nx.spring_layout(g, method='force')
         nx.draw(g, pos, node_color=node_colors[:len(g.nodes)],
-                node_size=50, with_labels=False, alpha=0.7)
+                node_size=50, with_labels=with_labels, alpha=0.7)
         plt.title('Граф (красные - боты, синие - люди)')
 
     except Exception as e:
         print(f"2D graph visualization failed: {e}")
 
 
-def visualize_menu(graph_data, results, feature_weights=None, feature_names=None, filename='bar_chart.png', use_3d=True):
+def visualize_menu(graph_data, results, feature_weights=None, feature_names=None,
+                   filename='bar_chart.png', use_3d=True, with_labels=False, show=True):
     """Основная функция визуализации с опцией 3D"""
 
     fig = plt.figure(figsize=(15, 5))
@@ -155,15 +156,17 @@ def visualize_menu(graph_data, results, feature_weights=None, feature_names=None
     if use_3d:
         visualize_graph_3d(graph_data)
     else:
-        visualize_graph_2d(graph_data)
+        visualize_graph_2d(graph_data, with_labels)
 
     visualize_feature_importance(feature_weights, feature_names, filename)
 
     plt.tight_layout()
-    #plt.show()
-    plt.close(fig)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
 
-def visualize_parameters_comparison(filenames=None):
+def visualize_parameters_comparison(filenames=None, show=True):
     fig = plt.figure(figsize=(18, 6))
     for i, file_name in enumerate(filenames, start=1):
         plt.subplot(1, len(filenames), i)
@@ -175,5 +178,7 @@ def visualize_parameters_comparison(filenames=None):
         else:
             plt.imshow(img)
     plt.tight_layout()
-    #plt.show()
-    plt.close(fig)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
