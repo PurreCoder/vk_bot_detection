@@ -1,5 +1,6 @@
 import torch
 import config
+from data_processing.data_filter import sieve_deactivated, balance_users
 from data_processing.file_manager import ensure_file_deleted, ensure_file_deleted, load_all_users
 from gnn_models.gnn import BotGNN
 from gnn_models.metrics_calc import compute_metrics
@@ -19,25 +20,8 @@ class GraphSAGETrainer:
 
         bots_users, humans_users = load_all_users(config.DATA_SOURCE['BOTS_FILE'], config.DATA_SOURCE['HUMANS_FILE'])
 
-        if config.FLAGS['FILTER_DEACTIVATED']:
-            is_not_deactivated = lambda _user: _user.get('deactivated', '') == ''
-            filter_deactivated = lambda _users: list(filter(is_not_deactivated, _users))
-
-            bots_users = filter_deactivated(bots_users)
-            print(f'\nВыделено {len(bots_users)} ботов в соответствии с фильтром')
-            humans_users = filter_deactivated(humans_users)
-            print(f'Выделено {len(humans_users)} людей в соответствии с фильтром\n')
-
-        if config.BOTS_TO_USERS > 1:
-            common_size = min(len(bots_users), len(humans_users))
-            humans_limit = int(common_size / config.BOTS_TO_USERS)
-            if len(humans_users) > humans_limit:
-                humans_users = humans_users[:humans_limit]
-
-            if len(bots_users) > common_size:
-                bots_users = bots_users[:common_size]
-
-            print(f'Общая выборка будет содержать {len(humans_users)} людей и {len(bots_users)} ботов\n')
+        bots_users, humans_users = sieve_deactivated(bots_users, humans_users)
+        bots_users, humans_users = balance_users(bots_users, humans_users)
 
         self.processor = DataProcessor(my_model, config.SCALER_SAVE_FILE)
         all_features, all_labels, all_ids = self.processor.get_all_features(bots_users, humans_users)

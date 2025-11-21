@@ -37,13 +37,17 @@ def on_click(event, pos, all_ids):
     if event.button != 3:
         return
 
+    min_dist = 1e9
+    target_node = 1
     for node, (x, y) in pos.items():
         distance = math.hypot(event.xdata - x, event.ydata - y)
-        if distance < 0.004:  # Tolerance
-            if node < len(all_ids):
-                user_url = f'https://vk.com/id{all_ids[node]}'
-                webbrowser.open(user_url, autoraise=False)
-                break
+        if distance < min_dist:
+            min_dist = distance
+            target_node = node
+
+    if min_dist < 0.009 and target_node < len(all_ids):
+        user_url = f'https://vk.com/id{all_ids[target_node]}'
+        webbrowser.open(user_url, autoraise=False)
 
 
 def visualize_graph_3d(graph_data):

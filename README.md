@@ -33,6 +33,7 @@ VK_GNN_Research
 │   │   vk_data_collector.py
 │
 ├───data_processing
+│   │   data_filter.py
 │   │   data_processor.py
 │   │   feature_processor.py
 │   │   file_manager.py
