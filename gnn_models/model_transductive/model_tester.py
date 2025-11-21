@@ -31,7 +31,7 @@ class ModelTester:
             humans_users = filter_deactivated(humans_users)
             print(f'Выделено {len(humans_users)} людей в соответствии с фильтром\n')
 
-        if config.BOTS_TO_USERS > 1:
+        if config.BOTS_TO_USERS > 1 or len(bots_users) != len(humans_users):
             common_size = min(len(bots_users), len(humans_users))
             humans_limit = int(common_size / config.BOTS_TO_USERS)
             if len(humans_users) > humans_limit:

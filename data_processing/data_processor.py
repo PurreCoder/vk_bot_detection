@@ -1,10 +1,8 @@
 import numpy as np
 import torch
-import config
 from torch_geometric.data import Data
 from sklearn.model_selection import train_test_split
 from data_processing.feature_processor import FeatureProcessor
-from data_processing.file_manager import save_array
 
 
 class DataProcessor(FeatureProcessor):
