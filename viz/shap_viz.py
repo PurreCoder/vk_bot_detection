@@ -5,6 +5,9 @@ from shap import Explanation
 
 
 class SHAPVisualizer:
+
+    MAX_EXPLANATIONS = 15
+
     def __init__(self, feature_names):
         self.feature_names = feature_names
 
@@ -84,8 +87,8 @@ class SHAPVisualizer:
         explained_counter = 0
         for its_id, explanation in zip(ids, explanations):
             if np.any(explanation.values):
-                if explained_counter > 15:
-                    print(f'Provided explanations only for 15 users, randomly chosen out of {len(ids)} mispredictions')
+                if explained_counter >= SHAPVisualizer.MAX_EXPLANATIONS:
+                    print(f'Provided explanations only for {SHAPVisualizer.MAX_EXPLANATIONS} users, randomly chosen out of {len(ids)} mispredictions')
                     break
                 self.plot_explanation(model_name, its_id, explanation)
                 explained_counter += 1

@@ -126,6 +126,7 @@ VK_GNN_Research
        - В `model_tester.py` в вызове метода `visualize_menu` установить `with_labels=True` для отображения меток для узлов графа
        - Параллельно `main.py` запустить скрипт `utilities/open_profile_by_id.py`
        - Выбрать интересующие метки и ввести их в одну строку через пробел в терминал скрипта `open_profile_by_id.py`
+       - UPD: добавлена функция просмотра странички пользователя в ВК по клику на узел
     - Для выбора SHAP-анализа интересующей модели (`GCN`, `GAT`, `GraphSAGE`), указать её в качестве аргумента `self.add_shap_analysis(...)` в теле метода `process_models` в `model_tester.py`
     - В вызове метода `add_shap_analysis` также можно выбрать способ подсчёта значений (`gradient`, `deeplift`, `kernel`) 
     - Имеет смысл настраивать параметры для метода `kernel` в вызове `add_shap_analysis`:

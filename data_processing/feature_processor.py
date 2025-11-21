@@ -25,6 +25,18 @@ class FeatureProcessor:
         all_ids = bots_ids + humans_ids
         return all_features, all_labels, all_ids
 
+    def get_all_features(self, user_list1, user_list2):
+        # Извлечение признаков
+        bots_features, bots_labels, bots_ids = self.extract_data(user_list1, 0)  # 0 - бот
+        humans_features, humans_labels, humans_ids = self.extract_data(user_list2, 1)  # 1 - человек
+
+        # Слияние данных от ботов и подлинных пользователей
+        all_features, all_labels, all_ids = self.merge_features(bots_features, humans_features,
+                                                                bots_labels, humans_labels,
+                                                                bots_ids, humans_ids)
+
+        return all_features, all_labels, all_ids
+
     def scale_features(self, all_features):
         if self.file_to_save is None:
             scaler = StandardScaler()

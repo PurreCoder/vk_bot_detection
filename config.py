@@ -11,6 +11,9 @@ DATA_SOURCE = dict(
     INFERENCE_FILE = 'data/for_inference/users_data.json',
 )
 
+# bots/users classes ratio
+BOTS_TO_USERS = 1 # has to be NO LESS than 1
+
 PARAMS_SOURCE = 'gnn_models/model_1/params.csv'
 
 MODELS_SAVES = dict(
@@ -19,3 +22,15 @@ MODELS_SAVES = dict(
 )
 
 SCALER_SAVE_FILE = 'saves/scaler.pkl'
+
+FLAGS = dict(
+    # forbid deactivated users from the graph? (except new nodes of inductive model!)
+    FILTER_DEACTIVATED = False,
+    # remove feature "deactivated" from the features vector?
+    REMOVE_DEACTIVATED = False
+)
+
+PLOT_SETTINGS = dict(
+    MAX_NODES = 3000,
+    MAX_EDGES = 30000
+)

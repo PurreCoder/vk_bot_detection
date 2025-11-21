@@ -9,12 +9,13 @@ from gnn_models.model_1.model import Model as my_model
 def make_predictions():
     # Старые данные
     original_bots_users, original_humans_users = load_all_users(config.DATA_SOURCE['BOTS_FILE'], config.DATA_SOURCE['HUMANS_FILE'])
-    producer = DataProcessor(my_model, config.SCALER_SAVE_FILE)
-    original_graph_data, original_ids = producer.prepare_full_graph_data(original_bots_users, original_humans_users)
+    processor = DataProcessor(my_model, config.SCALER_SAVE_FILE)
+    old_features, old_labels, old_ids = processor.get_all_features(original_bots_users, original_humans_users)
+    original_graph_data, original_ids = processor.prepare_full_graph_data(old_features, old_labels, old_ids)
 
     # Новые данные
     new_users = load_users(config.DATA_SOURCE['INFERENCE_FILE'])
-    new_features, ids = producer.extract_features_and_ids(new_users)
+    new_features, ids = processor.extract_features_and_ids(new_users)
 
     # Инференс новых узлов
     predictor = GraphSAGEPredictor(config.MODELS_SAVES['INDUCTIVE_SAVE'], Model.feature_names)

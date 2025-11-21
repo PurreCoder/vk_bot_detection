@@ -1,3 +1,6 @@
+import math
+import webbrowser
+import config
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import image as mpimg
@@ -26,6 +29,23 @@ def visualize_feature_importance(feature_weights, feature_names, filename):
     plt.close(fig_to_save)
 
 
+def on_click(event, pos, all_ids):
+    if event.inaxes is None:
+        return
+
+    # accepting only right-clicks
+    if event.button != 3:
+        return
+
+    for node, (x, y) in pos.items():
+        distance = math.hypot(event.xdata - x, event.ydata - y)
+        if distance < 0.004:  # Tolerance
+            if node < len(all_ids):
+                user_url = f'https://vk.com/id{all_ids[node]}'
+                webbrowser.open(user_url, autoraise=False)
+                break
+
+
 def visualize_graph_3d(graph_data):
     """3D визуализация графа"""
     try:
@@ -38,7 +58,7 @@ def visualize_graph_3d(graph_data):
         edges = graph_data.edge_index.t().cpu().numpy()
 
         # Ограничиваем количество узлов для производительности
-        max_nodes = 20000
+        max_nodes = config.PLOT_SETTINGS['MAX_EDGES']
         if graph_data.num_nodes > max_nodes:
             # Берем случайную выборку узлов
             node_indices = np.random.choice(graph_data.num_nodes, max_nodes, replace=False)
@@ -103,9 +123,9 @@ def visualize_graph_3d(graph_data):
         visualize_graph_2d(graph_data)
 
 
-def visualize_graph_2d(graph_data, with_labels=False):
+def visualize_graph_2d(graph_data, all_ids=(), with_labels=False):
     """2D визуализация графа"""
-    plt.subplot(1, 3, 2)
+    ax = plt.subplot(1, 3, 2)
     try:
         import networkx as nx
         g = nx.Graph()
@@ -114,14 +134,14 @@ def visualize_graph_2d(graph_data, with_labels=False):
         edges = graph_data.edge_index.t().cpu().numpy()
 
         # Ограничиваем для производительности
-        max_edges = 20000
+        max_edges = config.PLOT_SETTINGS['MAX_EDGES']
         if len(edges) > max_edges:
             edges = edges[:max_edges]
 
         g.add_edges_from(edges)
 
         node_colors = []
-        for i in range(min(2000, graph_data.num_nodes)):
+        for i in range(min(config.PLOT_SETTINGS['MAX_NODES'], graph_data.num_nodes)):
             if i < len(graph_data.y):
                 if graph_data.y[i] == 0:
                     node_colors.append('red')  # Боты
@@ -133,13 +153,14 @@ def visualize_graph_2d(graph_data, with_labels=False):
         pos = nx.spring_layout(g, method='force')
         nx.draw(g, pos, node_color=node_colors[:len(g.nodes)],
                 node_size=50, with_labels=with_labels, alpha=0.7)
+        ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, pos, all_ids))
         plt.title('Граф (красные - боты, синие - люди)')
 
     except Exception as e:
         print(f"2D graph visualization failed: {e}")
 
 
-def visualize_menu(graph_data, results, feature_weights=None, feature_names=None,
+def visualize_menu(graph_data, all_ids, results, feature_weights=None, feature_names=None,
                    filename='bar_chart.png', use_3d=True, with_labels=False, show=True):
     """Основная функция визуализации с опцией 3D"""
 
@@ -156,7 +177,7 @@ def visualize_menu(graph_data, results, feature_weights=None, feature_names=None
     if use_3d:
         visualize_graph_3d(graph_data)
     else:
-        visualize_graph_2d(graph_data, with_labels)
+        visualize_graph_2d(graph_data, all_ids, with_labels)
 
     visualize_feature_importance(feature_weights, feature_names, filename)
 

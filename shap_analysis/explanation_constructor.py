@@ -10,7 +10,7 @@ from gnn_models.model_1.model import Model as my_model
 def modify_input_hook(module, model_input):
     model_input = model_input[0]
     edge_index, _ = DataProcessor(my_model).build_edges(model_input.detach().cpu().numpy())
-    edge_index = edge_index.cuda()
+    edge_index = edge_index.to('cuda' if torch.cuda.is_available() else 'cpu')
     return model_input, edge_index
 
 def modify_output_hook(module, model_input, model_output):
@@ -19,18 +19,18 @@ def modify_output_hook(module, model_input, model_output):
 
 class ExplanationConstructor:
     def __init__(self, model, graph_data, data_to_explain):
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = model
-        self.background_data = graph_data.x.detach().cpu()[graph_data.train_mask.detach().cpu().numpy()].requires_grad_(True).cuda()
+        self.background_data = graph_data.x.detach().cpu()[graph_data.train_mask.detach().cpu().numpy()].requires_grad_(True).to(self.device)
         self.data_to_explain = data_to_explain
-
-        self.model = model.requires_grad_(True).cuda()
-        self.background_data.cuda()
+        self.model = model.requires_grad_(True).to(self.device)
+        self.background_data.to(self.device)
 
     def create_explanation(self):
         input_hook_handle = self.model.register_forward_pre_hook(modify_input_hook)
         output_hook_handle = self.model.register_forward_hook(modify_output_hook)
 
-        tensor_to_explain = torch.Tensor(self.data_to_explain).requires_grad_(True).cuda()
+        tensor_to_explain = torch.Tensor(self.data_to_explain).requires_grad_(True).to(self.device)
 
         self.model.eval()
         explainer = shap.GradientExplainer(self.model, self.background_data)

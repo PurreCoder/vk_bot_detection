@@ -1,4 +1,5 @@
 import numpy as np
+import config
 
 class Model:
     profile_traits = ('site', 'status', 'about', 'activities', 'interests', 'music', 'movies',
@@ -7,7 +8,9 @@ class Model:
     counters = ('albums', 'videos', 'photos', 'posts', 'friends', 'followers', 'gifts', 'groups', 'subscriptions', 'pages')
 
     feature_names = (
-        'sex', 'last_seen', 'followers_count', 'deactivated', *profile_traits, *counters,
+        'sex', 'last_seen', 'followers_count',
+        *(('deactivated',) if not config.FLAGS['REMOVE_DEACTIVATED'] else ()),
+        *profile_traits, *counters,
         'inspired_by', 'alcohol', 'life_main', 'people_main', 'smoking', 'religion',
         'occupation', 'universities', 'schools', 'languages'
     )

@@ -17,19 +17,43 @@ class GraphSAGETrainer:
         ensure_file_deleted(config.MODELS_SAVES['INDUCTIVE_SAVE'])
         ensure_file_deleted(config.SCALER_SAVE_FILE)
 
-        producer = DataProcessor(my_model, config.SCALER_SAVE_FILE)
         bots_users, humans_users = load_all_users(config.DATA_SOURCE['BOTS_FILE'], config.DATA_SOURCE['HUMANS_FILE'])
-        graph_data, ids = producer.prepare_full_graph_data(bots_users, humans_users)
+
+        if config.FLAGS['FILTER_DEACTIVATED']:
+            is_not_deactivated = lambda _user: _user.get('deactivated', '') == ''
+            filter_deactivated = lambda _users: list(filter(is_not_deactivated, _users))
+
+            bots_users = filter_deactivated(bots_users)
+            print(f'\nВыделено {len(bots_users)} ботов в соответствии с фильтром')
+            humans_users = filter_deactivated(humans_users)
+            print(f'Выделено {len(humans_users)} людей в соответствии с фильтром\n')
+
+        if config.BOTS_TO_USERS > 1:
+            common_size = min(len(bots_users), len(humans_users))
+            humans_limit = int(common_size / config.BOTS_TO_USERS)
+            if len(humans_users) > humans_limit:
+                humans_users = humans_users[:humans_limit]
+
+            if len(bots_users) > common_size:
+                bots_users = bots_users[:common_size]
+
+            print(f'Общая выборка будет содержать {len(humans_users)} людей и {len(bots_users)} ботов\n')
+
+        self.processor = DataProcessor(my_model, config.SCALER_SAVE_FILE)
+        all_features, all_labels, all_ids = self.processor.get_all_features(bots_users, humans_users)
+        graph_data, ids = self.processor.prepare_full_graph_data(all_features, all_labels, all_ids)
 
         self.model= BotGNN(graph_data.num_features, 64, 'SAGE')
 
-        self.test_model('GraphSAGE', self.model, graph_data)
+        self.test_model(self.model, graph_data)
 
         torch.save(self.model.state_dict(), config.MODELS_SAVES['INDUCTIVE_SAVE'])
         print("\nИндуктивная модель сохранена")
 
 
-    def test_model(self, model_name, model, graph_data):
+    def test_model(self, model, graph_data):
+        model_name = model.model_type
+
         print(f"\n=== Обучение {model_name} ===")
         trainer = ModelTrainer(model, self.device)
         trainer.train(graph_data, epochs=25)

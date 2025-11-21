@@ -1,5 +1,6 @@
 import ast
 import webbrowser
+import config
 
 BOTS_LIST_SIZE = 0
 
@@ -24,9 +25,9 @@ def main():
             if index <= 0:
                 break
 
-            user_id = get_element_from_file('../saves/used_bots_ids.txt', index)
+            user_id = get_element_from_file('../' + config.GRAPH_DATA_LOGS['BOTS_IDS_FILE'], index)
             if user_id == -1:
-                user_id = get_element_from_file('../saves/used_humans_ids.txt', index - BOTS_LIST_SIZE)
+                user_id = get_element_from_file('../' + config.GRAPH_DATA_LOGS['HUMANS_IDS_FILE'], index - BOTS_LIST_SIZE)
             if user_id == -1:
                 print('Sorry, but no can do :(')
                 continue

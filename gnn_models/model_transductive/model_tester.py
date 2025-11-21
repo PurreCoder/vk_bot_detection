@@ -1,7 +1,7 @@
 import torch
 import config
 from copy import deepcopy
-from data_processing.file_manager import load_all_users, prepare_clean_folder, save_json_data
+from data_processing.file_manager import load_all_users, prepare_clean_folder, save_json_data, save_array
 from gnn_models.gnn import BotGNN
 from gnn_models.metrics_calc import compute_metrics
 from gnn_models.model_transductive.model_trainer import ModelTrainer
@@ -21,8 +21,37 @@ class ModelTester:
         print(f"Используется устройство: {self.device}")
 
         bots_users, humans_users = load_all_users(config.DATA_SOURCE['BOTS_FILE'], config.DATA_SOURCE['HUMANS_FILE'])
+
+        if config.FLAGS['FILTER_DEACTIVATED']:
+            is_not_deactivated = lambda _user: _user.get('deactivated', '') == ''
+            filter_deactivated = lambda _users: list(filter(is_not_deactivated, _users))
+
+            bots_users = filter_deactivated(bots_users)
+            print(f'\nВыделено {len(bots_users)} ботов в соответствии с фильтром')
+            humans_users = filter_deactivated(humans_users)
+            print(f'Выделено {len(humans_users)} людей в соответствии с фильтром\n')
+
+        if config.BOTS_TO_USERS > 1:
+            common_size = min(len(bots_users), len(humans_users))
+            humans_limit = int(common_size / config.BOTS_TO_USERS)
+            if len(humans_users) > humans_limit:
+                humans_users = humans_users[:humans_limit]
+
+            if len(bots_users) > common_size:
+                bots_users = bots_users[:common_size]
+
+            print(f'Общая выборка будет содержать {len(humans_users)} людей и {len(bots_users)} ботов\n')
+
         self.processor = DataProcessor(my_model)
-        graph_data, ids = self.processor.prepare_full_graph_data(bots_users, humans_users)
+        all_features, all_labels, all_ids = self.processor.get_all_features(bots_users, humans_users)
+
+        # logging users ids
+        save_array(all_ids[:len(bots_users)], config.GRAPH_DATA_LOGS['BOTS_IDS_FILE'])
+        save_array(all_ids[len(bots_users):], config.GRAPH_DATA_LOGS['HUMANS_IDS_FILE'])
+
+        self.all_ids = all_ids
+
+        graph_data, ids = self.processor.prepare_full_graph_data(all_features, all_labels, all_ids)
 
         self.models = {
             'GCN': BotGNN(graph_data.num_features, 64, 'GCN'),
@@ -102,7 +131,7 @@ class ModelTester:
         top_features_idx = np.argsort(feature_weights)[-10:]
         top_features_names = [my_model.feature_names[i] for i in top_features_idx]
 
-        visualize_menu(graph_data, self.results,
+        visualize_menu(graph_data, self.all_ids, self.results,
                        feature_weights=feature_weights[top_features_idx],
                        feature_names=top_features_names,
                        filename=f'saves/{model.model_type}.png',

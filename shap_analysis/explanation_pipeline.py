@@ -10,7 +10,8 @@ def load_mistakes_to_explain(model, processor):
     ids_mistaken = list(map(int, model_mistakes.keys()))
     bots_users, humans_users = load_all_users(DATA_SOURCE['BOTS_FILE'], DATA_SOURCE['HUMANS_FILE'])
     list_to_filter = bots_users + humans_users
-    filtered_list = [entry for entry in list_to_filter if entry.get('id', 0) in ids_mistaken]
+    mistakes_filter = lambda _entry: _entry.get('id', 0) in ids_mistaken
+    filtered_list = list(filter(mistakes_filter, list_to_filter))
     list_to_explain, id_list = processor.extract_features_and_ids(filtered_list)
     return list_to_explain, id_list
 

@@ -70,20 +70,8 @@ class DataProcessor(FeatureProcessor):
 
         return graph_data
 
-    def prepare_full_graph_data(self, bots_users, humans_users):
-        """Получение готового объекта Data на основе списков ботов и подлинных пользователей"""
-
-        # Извлечение признаков
-        bots_features, bots_labels, bots_ids = self.extract_data(bots_users, 0)  # 0 - бот
-        humans_features, humans_labels, humans_ids = self.extract_data(humans_users, 1)  # 1 - человек
-
-        save_array(humans_ids, config.GRAPH_DATA_LOGS['HUMANS_IDS_FILE'])
-        save_array(bots_ids, config.GRAPH_DATA_LOGS['BOTS_IDS_FILE'])
-
-        # Слияние данных от ботов и подлинных пользователей
-        all_features, all_labels, all_ids = self.merge_features(bots_features, humans_features,
-                                                                bots_labels, humans_labels,
-                                                                bots_ids, humans_ids)
+    def prepare_full_graph_data(self, all_features, all_labels, all_ids):
+        """Получение готового объекта Data на основе списков признаков, метод и идентификаторов"""
 
         # Масштабирование
         all_features = self.scale_features(all_features)
