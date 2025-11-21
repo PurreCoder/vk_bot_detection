@@ -43,14 +43,17 @@ class ModelTrainer:
 
         return test_accuracy.item()
 
-    def predict_labels_for_test(self, data):
+    def predict_labels_for_test(self, data, probs=False):
         self.model.eval()
         data = data.to(self.device)
 
         with torch.no_grad():
             out = self.model(data)
 
-        pred = out.argmax(dim=1)
+        if probs:
+            pred = torch.exp(out)[:,1]
+        else:
+            pred = out.argmax(dim=1)
         test_mask = data.test_mask
         y_true = data.y[test_mask]
         y_pred = pred[test_mask]

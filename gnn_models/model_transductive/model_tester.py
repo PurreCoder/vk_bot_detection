@@ -1,4 +1,6 @@
 import torch
+from sklearn.metrics import auc, roc_curve
+
 import config
 from copy import deepcopy
 from data_processing.data_filter import sieve_deactivated, balance_users
@@ -13,6 +15,7 @@ from shap_analysis.gradient_values_computer import GradientValuesComputer
 from shap_analysis.deep_values_computer import DeepValuesComputer
 from shap_analysis.kernel_values_computer import KernelValuesComputer
 from viz.graph_viz import *
+from viz.roc_viz import plot_roc_curve
 from viz.shap_viz import SHAPVisualizer
 
 
@@ -79,7 +82,8 @@ class ModelTester:
         trainer.train(graph_data, epochs=25)
 
         # getting labels and model predictions for data
-        y_true, y_pred = trainer.predict_labels_for_test(graph_data)
+        y_true, y_probs = trainer.predict_labels_for_test(graph_data, probs=True)
+        y_pred = np.round(y_probs)
 
         # logging model mistakes
         test_ids = [its_id for its_id, its_bit in zip(ids, graph_data.test_mask) if its_bit]
@@ -95,7 +99,7 @@ class ModelTester:
         print(f"{model_name} F1-Score: {metrics['f1']:.4f}")
 
         # ROC-AUC
-        # fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+        # fpr, tpr, thresholds = roc_curve(y_true, y_probs, pos_label=1)
         # roc_auc = auc(fpr, tpr)
         # print(f"{model_name} ROC-AUC: {roc_auc:.4f}")
         # plot_roc_curve(fpr, tpr, roc_auc)
