@@ -23,7 +23,7 @@ class KernelValuesComputer(ValuesComputer):
 
             # Create edge_index: simple fully connected graph for the batch
             if n_samples > 1:
-                edge_index, edge_attr = DataProcessor(my_model).build_edges(x_array)
+                edge_index, edge_attr = DataProcessor(my_model).get_connections_normalized(x_array)
             else:
                 edge_index = torch.LongTensor([list(range(n_samples)), list(range(n_samples))]).to(self.device)
                 #edge_attr = torch.tensor([1] * n_samples, dtype=torch.float).to(self.device)

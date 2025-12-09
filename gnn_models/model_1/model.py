@@ -3,12 +3,12 @@ import config
 
 class Model:
     profile_traits = ('site', 'status', 'about', 'activities', 'interests', 'music', 'movies',
-                      'tv', 'books', 'games', 'quotes', 'mobile_phone', 'home_phone', 'relation', 'has_photo', 'bdate')
+                      'tv', 'books', 'games', 'quotes', 'mobile_phone', 'home_phone', 'relation', 'has_photo', 'bdate', 'city')
 
     counters = ('albums', 'videos', 'photos', 'posts', 'friends', 'followers', 'gifts', 'groups', 'subscriptions', 'pages')
 
     feature_names = (
-        'sex', 'last_seen', 'followers_count',
+        'sex', 'last_seen', 'followers_count', 'domain',
         *(('deactivated',) if not config.FLAGS['REMOVE_DEACTIVATED'] else ()),
         *profile_traits, *counters,
         'inspired_by', 'alcohol', 'life_main', 'people_main', 'smoking', 'religion',
@@ -17,7 +17,7 @@ class Model:
 
     features_count = len(feature_names)
 
-    SIMILARITY_THRESHOLD = 0.9
+    SIMILARITY_THRESHOLD = 0.95
 
     @staticmethod
     def extract_user_features(user):
@@ -32,6 +32,8 @@ class Model:
             feature_dict['last_seen'] = last_seen.get('time', 0) if last_seen else 0
         if 'followers_count' in Model.feature_names:
             feature_dict['followers_count'] = user.get('followers_count', 0)
+        if 'domain' in Model.feature_names:
+            feature_dict['domain'] = int(not(user.get('domain', 'id').startswith('id')))
         if 'deactivated' in Model.feature_names:
             del_reason = user.get('deactivated', '')
             feature_dict['deactivated'] = {'': 0, 'deleted': 1, 'banned': 2}.get(del_reason, 3)

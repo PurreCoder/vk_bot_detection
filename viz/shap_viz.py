@@ -73,8 +73,6 @@ class SHAPVisualizer:
             print(f"❌ Dependence plot failed: {e}")
 
     def plot_explanation(self, model_name, its_id, explanation):
-        # print("----------")
-        #print(explanation)
         plt.figure(figsize=(10, 6))
         shap.plots.waterfall(explanation, max_display=len(self.feature_names), show=False)
         plt.title(f'SHAP Explanation for user id{its_id}')
@@ -107,10 +105,9 @@ class SHAPVisualizer:
         # Create feature importance plot
         self.plot_feature_importance(shap_values)
 
-        # Plot dependence for top 3 features
+        # Plot dependence for top 10 features
         overall_importance = np.mean(np.abs(shap_values), axis=0)
-
-        top_features_idx = np.argsort(overall_importance)[-3:][::-1]
+        top_features_idx = np.argsort(overall_importance)[-10:][::-1]
         for idx in top_features_idx:
             self.plot_dependence(shap_values, test_data, idx)
 

@@ -1,13 +1,15 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+
+from data_processing.feature_scaler import FeatureScalerSingleton
 from data_processing.file_manager import deserialize_object, serialize_object
+from gnn_models.model_1.limits import model_limits
 
 
 class FeatureProcessor:
     def __init__(self, cls, file_to_save=None):
         self.model = cls
         self.file_to_save = file_to_save
-        self.node_features = None
 
     def extract_features(self, users):
         return self.model.extract_features(users)
@@ -37,19 +39,21 @@ class FeatureProcessor:
 
         return all_features, all_labels, all_ids
 
-    def scale_features(self, all_features):
+    def scale_with_save(self, all_features):
         if self.file_to_save is None:
-            scaler = StandardScaler()
+            scaler = FeatureScalerSingleton(self.model, model_limits)
         else:
             scaler = deserialize_object(self.file_to_save)
             if scaler is None:
-                scaler = StandardScaler()
+                scaler = FeatureScalerSingleton(self.model, model_limits)
 
-        # Нормализуем признаки
-        all_features = scaler.fit_transform(all_features)
+        all_features = self.scale(scaler, all_features)
 
         if self.file_to_save is not None:
-            # Сохраняем scaler при обучении
             serialize_object(scaler, self.file_to_save)
 
+        return all_features
+
+    def scale(self, scaler, all_features):
+        all_features = scaler.fit_transform(all_features)
         return all_features

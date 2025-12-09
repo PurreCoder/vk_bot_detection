@@ -9,7 +9,7 @@ from gnn_models.model_1.model import Model as my_model
 
 def modify_input_hook(module, model_input):
     model_input = model_input[0]
-    edge_index, _ = DataProcessor(my_model).build_edges(model_input.detach().cpu().numpy())
+    edge_index, _ = DataProcessor(my_model).get_connections_normalized(model_input.detach().cpu().numpy())
     edge_index = edge_index.to('cuda' if torch.cuda.is_available() else 'cpu')
     return model_input, edge_index
 

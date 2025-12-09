@@ -15,7 +15,7 @@ VK_GNN_Research
 │   main.py
 │   README.md
 │   requirements.txt
-│  
+│
 ├───data
 │   ├───for_inference
 │   │       users_data.json
@@ -27,6 +27,9 @@ VK_GNN_Research
 │   │       humans_ids.json
 │   │
 │   └───for_model_2
+│           bots_data.json
+│           humans_data.json
+│
 ├───data_collection
 │   │   download_bots_json.py
 │   │   get_group_members.py
@@ -36,17 +39,19 @@ VK_GNN_Research
 │   │   data_filter.py
 │   │   data_processor.py
 │   │   feature_processor.py
+│   │   feature_scaler.py
 │   │   file_manager.py
+│   │   minmax_transformer.py
 │
 ├───gnn_models
 │   │   gnn.py
 │   │   metrics_calc.py
 │   │
 │   ├───model_1
+│   │   │   limits.py
 │   │   │   model.py
 │   │   │   params.csv
 │   │
-│   ├───model_2
 │   ├───model_inductive
 │   │   │   graphsage_predictor.py
 │   │   │   graphsage_predictor_tester.py
@@ -73,7 +78,6 @@ VK_GNN_Research
 │   │   used_humans_ids.txt
 │   │
 │   ├───dependence_plots
-│   │
 │   └───explanation_plots
 │
 ├───shap_analysis
@@ -85,8 +89,8 @@ VK_GNN_Research
 │   │   values_computer.py
 │
 ├───utilities
-│       open_profile_by_id.py
-│       vk_token_helper.py
+│   │   open_profile_by_id.py
+│   │   vk_token_helper.py  
 │
 ├───viz
 │   │   graph_viz.py

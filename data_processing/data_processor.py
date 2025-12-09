@@ -3,6 +3,8 @@ import torch
 from torch_geometric.data import Data
 from sklearn.model_selection import train_test_split
 from data_processing.feature_processor import FeatureProcessor
+from data_processing.feature_scaler import FeatureScalerSingleton, FeatureScaler
+from gnn_models.model_1.limits import model_limits
 
 
 class DataProcessor(FeatureProcessor):
@@ -10,7 +12,6 @@ class DataProcessor(FeatureProcessor):
         super(DataProcessor, self).__init__(cls, file_to_save)
         self.model = cls
         self.file_to_save = file_to_save
-        self.node_features = None
 
     def build_edges(self, all_features):
         """Строит графовую струтуру на основе косинусового свойства"""
@@ -34,12 +35,16 @@ class DataProcessor(FeatureProcessor):
 
         return edge_index, edge_attr
 
+    def get_connections_normalized(self, all_features):
+        normalized = FeatureScalerSingleton.normalize(all_features)
+        return self.build_edges(normalized)
+
     def build_graph(self, all_features, all_labels):
         """Строит граф на основе сходства пользователей"""
 
         print("Построение графа...")
 
-        edge_index, edge_attr = self.build_edges(all_features)
+        edge_index, edge_attr = self.get_connections_normalized(all_features)
 
         print(f"Граф построен: {len(all_features)} узлов, {edge_index.shape[1]} ребер")
 
@@ -72,7 +77,7 @@ class DataProcessor(FeatureProcessor):
         """Получение готового объекта Data на основе списков признаков, метод и идентификаторов"""
 
         # Масштабирование
-        all_features = self.scale_features(all_features)
+        all_features = self.scale_with_save(all_features)
 
         # Построение графа
         graph_data = self.build_graph(all_features, all_labels)

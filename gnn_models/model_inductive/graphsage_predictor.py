@@ -40,9 +40,9 @@ class GraphSAGEPredictor:
             existing_graph_data: Data объект обученного графа (опционально)
             k_neighbors: количество ближайших соседей для построения связей
         """
-        # Нормализуем признаки
-        new_features_normalized = self.scaler.transform(new_features)
-        new_features_tensor = torch.tensor(new_features_normalized, dtype=torch.float).to(self.device)
+        # Масштабируем признаки
+        new_features_scaled = self.scaler.fit_transform(new_features)
+        new_features_tensor = torch.tensor(new_features_scaled, dtype=torch.float).to(self.device)
 
         if existing_graph_data is None:
             # Если нет существующего графа, создаем минимальный граф из новых узлов
@@ -54,7 +54,6 @@ class GraphSAGEPredictor:
     def _predict_isolated(self, new_features_tensor):
         """Предсказание для изолированных узлов (без графа)"""
         with torch.no_grad():
-            batch_size = new_features_tensor.size(0)
             edge_index = torch.empty(2, 0, dtype=torch.long).to(self.device)
 
             predictions = self.model(new_features_tensor, edge_index)

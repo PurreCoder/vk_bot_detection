@@ -1,7 +1,7 @@
 import torch
 import config
 from data_processing.data_filter import sieve_deactivated, balance_users
-from data_processing.file_manager import ensure_file_deleted, ensure_file_deleted, load_all_users
+from data_processing.file_manager import ensure_file_deleted, load_all_users
 from gnn_models.gnn import BotGNN
 from gnn_models.metrics_calc import compute_metrics
 from gnn_models.model_transductive.model_trainer import ModelTrainer

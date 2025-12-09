@@ -1,6 +1,5 @@
 import torch
 from sklearn.metrics import auc, roc_curve
-
 import config
 from copy import deepcopy
 from data_processing.data_filter import sieve_deactivated, balance_users
@@ -79,7 +78,7 @@ class ModelTester:
         model_name = model.model_type
         print(f"\n=== Обучение {model_name} ===")
         trainer = ModelTrainer(model, self.device)
-        trainer.train(graph_data, epochs=25)
+        trainer.train(graph_data, epochs=30)
 
         # getting labels and model predictions for data
         y_true, y_probs = trainer.predict_labels_for_test(graph_data, probs=True)
@@ -99,10 +98,10 @@ class ModelTester:
         print(f"{model_name} F1-Score: {metrics['f1']:.4f}")
 
         # ROC-AUC
-        # fpr, tpr, thresholds = roc_curve(y_true, y_probs, pos_label=1)
-        # roc_auc = auc(fpr, tpr)
-        # print(f"{model_name} ROC-AUC: {roc_auc:.4f}")
-        # plot_roc_curve(fpr, tpr, roc_auc)
+        fpr, tpr, thresholds = roc_curve(y_true, y_probs, pos_label=1)
+        roc_auc = auc(fpr, tpr)
+        print(f"{model_name} ROC-AUC: {roc_auc:.4f}")
+        #plot_roc_curve(fpr, tpr, roc_auc)
 
     def log_model_mistakes(self, y_true, y_pred, test_ids, model_name):
         wrong_preds = {}

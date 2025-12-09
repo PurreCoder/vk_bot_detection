@@ -1,3 +1,6 @@
+from enum import Enum
+SCALING_STRATEGY = Enum('Scaling', 'STANDARD MIXED')
+
 ACCESS_TOKEN = ""
 
 GRAPH_DATA_LOGS = dict(
@@ -6,8 +9,8 @@ GRAPH_DATA_LOGS = dict(
 )
 
 DATA_SOURCE = dict(
-    BOTS_FILE = 'data/for_model_1/bots_data.json',
-    HUMANS_FILE = 'data/for_model_1/humans_data.json',
+    BOTS_FILE = 'data/for_model_2/bots_data.json',
+    HUMANS_FILE = 'data/for_model_2/humans_data.json',
     INFERENCE_FILE = 'data/for_inference/users_data.json',
 )
 
@@ -22,6 +25,8 @@ MODELS_SAVES = dict(
 )
 
 SCALER_SAVE_FILE = 'saves/scaler.pkl'
+# (outdated, but can be brought back to code)
+SCALING = SCALING_STRATEGY.MIXED
 
 FLAGS = dict(
     # forbid deactivated users from the graph? (except new nodes of inductive model!)
@@ -32,5 +37,5 @@ FLAGS = dict(
 
 PLOT_SETTINGS = dict(
     MAX_NODES = 3000,
-    MAX_EDGES = 30000
+    MAX_EDGES = 170000
 )

@@ -12,7 +12,7 @@ class GradientValuesComputer(ValuesComputer):
 
         print("Computing attribute values using Integrated Gradients...")
 
-        edge_index, _ = DataProcessor(my_model).build_edges(test_data)
+        edge_index, _ = DataProcessor(my_model).get_connections_normalized(test_data)
         test_tensor = torch.Tensor(test_data).requires_grad_(True).to(self.device)
         edge_index = edge_index.to(self.device)
 

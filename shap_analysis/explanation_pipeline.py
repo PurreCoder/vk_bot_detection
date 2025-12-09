@@ -1,6 +1,9 @@
 from copy import deepcopy
-from config import DATA_SOURCE
+import numpy as np
+import config
+from data_processing.feature_scaler import FeatureScalerSingleton
 from data_processing.file_manager import load_all_users, load_json_data
+from gnn_models.model_1.limits import model_limits
 from shap_analysis.explanation_constructor import ExplanationConstructor
 
 
@@ -8,7 +11,7 @@ def load_mistakes_to_explain(model, processor):
     print("\nLoading false predictions...")
     model_mistakes = load_json_data(f'saves/{model.model_type}_mistakes.json')
     ids_mistaken = list(map(int, model_mistakes.keys()))
-    bots_users, humans_users = load_all_users(DATA_SOURCE['BOTS_FILE'], DATA_SOURCE['HUMANS_FILE'])
+    bots_users, humans_users = load_all_users(config.DATA_SOURCE['BOTS_FILE'], config.DATA_SOURCE['HUMANS_FILE'])
     list_to_filter = bots_users + humans_users
     mistakes_filter = lambda _entry: _entry.get('id', 0) in ids_mistaken
     filtered_list = list(filter(mistakes_filter, list_to_filter))
@@ -20,6 +23,7 @@ def shuffle_mistakes(list_to_explain, id_list):
     from random import shuffle
     shuffle(pairs)
     list_to_explain, id_list = zip(*pairs)
+    list_to_explain = np.array(list_to_explain)
     return list_to_explain, id_list
 
 def explain_false_predictions(processor, model, graph_data, shap_visualizer):
@@ -29,7 +33,7 @@ def explain_false_predictions(processor, model, graph_data, shap_visualizer):
     # not just trimming array to top-15 rn in order to preserve data to build proper graph structure
     list_to_explain, id_list = shuffle_mistakes(list_to_explain, id_list)
 
-    list_to_explain_scaled = processor.scale_features(list_to_explain)
+    list_to_explain_scaled = processor.scale_with_save(list_to_explain)
 
     print("\nExplaining false predictions...")
     constructor = ExplanationConstructor(deepcopy(model), graph_data, list_to_explain_scaled)
