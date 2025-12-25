@@ -40,9 +40,9 @@ class ModelTester:
         graph_data, ids = self.processor.prepare_full_graph_data(all_features, all_labels, all_ids)
 
         self.models = {
-            'GCN': BotGNN(graph_data.num_features, 64, 'GCN'),
-            'GAT': BotGNN(graph_data.num_features, 64, 'GAT'),
-            'SAGE': BotGNN(graph_data.num_features, 64, 'SAGE')
+            'GCN': BotGNN(graph_data.num_features, 512, 'GCN'),
+            'GAT': BotGNN(graph_data.num_features, 256, 'GAT'),
+            'SAGE': BotGNN(graph_data.num_features, 512, 'SAGE')
         }
 
         self.results = {}
@@ -78,7 +78,7 @@ class ModelTester:
         model_name = model.model_type
         print(f"\n=== Обучение {model_name} ===")
         trainer = ModelTrainer(model, self.device)
-        trainer.train(graph_data, epochs=30)
+        trainer.train(graph_data, epochs=80)
 
         # getting labels and model predictions for data
         y_true, y_probs = trainer.predict_labels_for_test(graph_data, probs=True)
@@ -122,7 +122,7 @@ class ModelTester:
                        feature_weights=feature_weights[top_features_idx],
                        feature_names=top_features_names,
                        filename=f'saves/{model.model_type}.png',
-                       use_3d=False, with_labels=False, show=True)
+                       use_3d=False, with_labels=False, show=False)
 
     def get_shap_values(self, model, graph_data, method, **kwargs):
         if method == 'kernel':

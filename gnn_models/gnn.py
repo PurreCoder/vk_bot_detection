@@ -20,9 +20,9 @@ class BotGNN(nn.Module):
             self.conv3 = GCNConv(hidden_channels, hidden_channels)
 
         elif model_type == 'GAT':
-            self.conv1 = GATConv(num_features, hidden_channels, heads=4, concat=True)
-            self.conv2 = GATConv(hidden_channels * 4, hidden_channels, heads=4, concat=True)
-            self.conv3 = GATConv(hidden_channels * 4, hidden_channels, heads=1, concat=False)
+            self.conv1 = GATConv(num_features, hidden_channels, heads=18, concat=True)
+            self.conv2 = GATConv(hidden_channels * 18, hidden_channels, heads=18, concat=True)
+            self.conv3 = GATConv(hidden_channels * 18, hidden_channels, heads=1, concat=False)
 
         elif model_type == 'SAGE':
             self.conv1 = SAGEConv(num_features, hidden_channels)

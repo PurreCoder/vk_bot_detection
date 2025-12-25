@@ -3,6 +3,7 @@ import os
 
 
 def load_json_data(users_file):
+    data = None
     try:
         with open(users_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
