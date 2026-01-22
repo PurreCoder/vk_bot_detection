@@ -16,6 +16,7 @@ from shap_analysis.kernel_values_computer import KernelValuesComputer
 from viz.graph_viz import *
 from viz.roc_viz import plot_roc_curve
 from viz.shap_viz import SHAPVisualizer
+from viz.learn_viz import plot_learning_curve, LearningPlotter
 
 
 class ModelTester:
@@ -78,7 +79,10 @@ class ModelTester:
         model_name = model.model_type
         print(f"\n=== Обучение {model_name} ===")
         trainer = ModelTrainer(model, self.device)
-        trainer.train(graph_data, epochs=80)
+
+        loss_data, acc_data = trainer.train(graph_data, epochs=75)
+        LearningPlotter().plot(loss_data, metric='loss', title=f'{model_name} Loss', color='red', linewidth=1, grid=True)
+        LearningPlotter().plot(acc_data, metric='accuracy', title=f'{model_name} Accuracy', color='blue', linewidth=1, grid=True)
 
         # getting labels and model predictions for data
         y_true, y_probs = trainer.predict_labels_for_test(graph_data, probs=True)

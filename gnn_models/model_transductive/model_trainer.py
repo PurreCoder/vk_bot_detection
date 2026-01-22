@@ -1,17 +1,21 @@
 import torch
 import torch.nn as nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
 
 
 class ModelTrainer:
     def __init__(self, model, device):
         self.model = model.to(device)
         self.device = device
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+        self.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.02)
         self.criterion = nn.CrossEntropyLoss()
+
+        self.scheduler = CosineAnnealingLR(self.optimizer, T_max=75)
 
     def train(self, data, epochs=15):
         self.model.train()
         train_losses = []
+        train_acc = []
 
         data = data.to(self.device)
 
@@ -23,13 +27,14 @@ class ModelTrainer:
             self.optimizer.step()
 
             train_losses.append(loss.item())
+            accuracy = self.test(data)
+            self.model.train()
+            train_acc.append(accuracy)
 
-            if epoch % 5 == 0:
-                accuracy = self.test(data)
+            if epoch % 5 == 0 or epoch == epochs - 1:
                 print(f'Epoch {epoch:03d}, Loss: {loss:.4f}, Accuracy: {accuracy:.4f}')
-                self.model.train()
 
-        return train_losses
+        return train_losses, train_acc
 
     def test(self, data):
         self.model.eval()
